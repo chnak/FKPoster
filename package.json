@@ -1,6 +1,6 @@
 {
   "name": "@chnak/poster",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "新一代海报制作插件 - 基于 Paper.js，支持多层级、组件化、相对坐标",
   "main": "src/index.js",
   "scripts": {
