@@ -1,8 +1,21 @@
+---
+name: fkposter
+description: FKPoster 海报构建技能。适用于多种视觉内容创建场景：名片、宣传海报、邀请函、证书、优惠券、菜单、订单小票、社交媒体图片（微博、微信、小红书）、广告横幅、产品图片、天气卡片、音乐播放列表封面、书籍封面、电影海报、旅游明信片、餐厅菜单、活动海报、个人头像卡片、统计图表等视觉设计。
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
+license: MIT
+---
+
 # Poster Plugin V2 使用指南
 
 ## 简介
 
-Poster Plugin V2 是一个基于 Paper.js 的海报制作插件，支持图层管理、组件复用、元素布局等功能。
+Poster Plugin 是一个基于 Paper.js 的海报制作插件，支持图层管理、组件复用、元素布局等功能。
+
+## 安装
+
+```bash
+npm install @chnak/poster
+```
 
 ## 核心概念
 
