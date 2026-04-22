@@ -4,6 +4,7 @@
 const { Component } = require('../core/Component')
 const { CircleElement } = require('../elements/CircleElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Timeline extends Component {
   constructor(config = {}) {
@@ -23,6 +24,10 @@ class Timeline extends Component {
     this.dateColor = config.dateColor || '#888888'
     this.titleColor = config.titleColor || '#ffffff'
     this.descColor = config.descColor || '#aaaaaa'
+    // 可自定义的字体大小
+    this.dateSize = config.dateSize || 12
+    this.titleSize = config.titleSize || 16
+    this.descSize = config.descSize || 13
   }
 
   initialize(paper) {
@@ -36,8 +41,16 @@ class Timeline extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absDotSize = toPixels(this.dotSize, context2d, 'width')
+    const absGap = toPixels(this.gap, context2d, 'height')
+    const absDateSize = toFontSizePixels(this.dateSize, context2d)
+    const absTitleSize = toFontSizePixels(this.titleSize, context2d)
+    const absDescSize = toFontSizePixels(this.descSize, context2d)
 
     // 清理旧元素
     this._cleanup()
@@ -45,13 +58,15 @@ class Timeline extends Component {
     if (!this.items || this.items.length === 0) return
 
     const centerX = absX + 80
+    const centerY = absY + absDotSize / 2
     const contentX = absX + 120
+    const endY = centerY + (this.items.length - 1) * absGap
 
-    // 主线
+    // 主线 - 从第一个点到最后一个点
     if (this.items.length > 1) {
       this._lineItem = new paper.Path.Line({
-        from: [centerX, absY + this.dotSize / 2],
-        to: [centerX, absY + (this.items.length - 1) * this.gap + this.dotSize / 2],
+        from: [centerX, centerY],
+        to: [centerX, endY],
         strokeColor: new paper.Color(this.lineColor),
         strokeWidth: 2,
       })
@@ -62,28 +77,34 @@ class Timeline extends Component {
       const item = this.items[i]
       if (!item) continue
 
-      const itemY = absY + i * this.gap
+      // 圆点中心 Y 位置
+      const dotCenterY = centerY + i * absGap
+      // 文字基线对齐圆心：bounds.y = dotCenterY - fontSize * 0.7
+      // 这样文本基线会落在 dotCenterY 位置
+      const dateBaseline = dotCenterY - absDateSize * 0.7
+      const titleBaseline = dotCenterY - absTitleSize * 0.7
       const isActive = item.active !== false
 
-      // 圆点
+      // 圆点 - 中心对齐
       const dot = new CircleElement({
         x: centerX,
-        y: itemY + this.dotSize / 2,
-        radius: this.dotSize / 2,
+        y: dotCenterY,
+        radius: absDotSize / 2,
         fillColor: isActive ? this.dotColor : this.lineColor,
+        anchor: [0.5, 0.5],
         opacity: this.opacity,
       })
       dot.initialize(paper)
       dot.render(paper, context)
       this._dotElements.push(dot)
 
-      // 日期
+      // 日期 - 文本基线对齐
       if (item.date) {
         const dateEl = new TextElement({
           x: absX + 10,
-          y: itemY + this.dotSize / 2 + 5,
+          y: dateBaseline,
           text: item.date,
-          fontSize: 12,
+          fontSize: absDateSize,
           fontFamily: this.fontFamily,
           color: this.dateColor,
           textAlign: 'left',
@@ -94,12 +115,12 @@ class Timeline extends Component {
         this._dateElements.push(dateEl)
       }
 
-      // 标题
+      // 标题 - 文本基线对齐
       const titleEl = new TextElement({
         x: contentX,
-        y: itemY + this.dotSize / 2 + 5,
+        y: titleBaseline,
         text: item.title || `Event ${i + 1}`,
-        fontSize: 16,
+        fontSize: absTitleSize,
         fontFamily: this.fontFamily,
         color: isActive ? this.titleColor : '#666666',
         textAlign: 'left',
@@ -109,13 +130,14 @@ class Timeline extends Component {
       titleEl.render(paper, context)
       this._titleElements.push(titleEl)
 
-      // 描述
+      // 描述 - 紧跟在标题下方
       if (item.description) {
+        const descY = titleBaseline + absTitleSize + 8 + absDescSize / 3
         const descEl = new TextElement({
           x: contentX,
-          y: itemY + this.dotSize / 2 + 28,
+          y: descY,
           text: item.description,
-          fontSize: 13,
+          fontSize: absDescSize,
           fontFamily: this.fontFamily,
           color: this.descColor,
           textAlign: 'left',

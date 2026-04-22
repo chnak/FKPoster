@@ -2,6 +2,7 @@
  * 表格组件
  */
 const { Component } = require('../core/Component')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Table extends Component {
   constructor(config = {}) {
@@ -33,8 +34,15 @@ class Table extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absRowHeight = toPixels(this.rowHeight, context2d, 'height')
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
+    const absHeaderFontSize = toFontSizePixels(this.headerFontSize, context2d)
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -45,12 +53,12 @@ class Table extends Component {
     if (!paper.project || !paper.project.activeLayer) return
     if (!Array.isArray(this.columns) || this.columns.length === 0) return
 
-    const totalHeight = this.rowHeight * (this.rows.length + 1)
+    const totalHeight = absRowHeight * (this.rows.length + 1)
 
     // 外边框
     const outerBorder = new paper.Path.Rectangle({
       point: [absX, absY],
-      size: [this.width, totalHeight]
+      size: [absWidth, totalHeight]
     })
     outerBorder.fillColor = new paper.Color('transparent')
     outerBorder.strokeColor = new paper.Color(this.borderColor)
@@ -61,7 +69,7 @@ class Table extends Component {
     // 表头背景
     const headerBgRect = new paper.Path.Rectangle({
       point: [absX, absY],
-      size: [this.width, this.rowHeight]
+      size: [absWidth, absRowHeight]
     })
     headerBgRect.fillColor = new paper.Color(this.headerBg)
     headerBgRect.strokeColor = new paper.Color(this.borderColor)
@@ -72,7 +80,7 @@ class Table extends Component {
     // 表头
     let currentX = absX
     this.columns.forEach((col, index) => {
-      const colWidth = col.width || (this.width / this.columns.length)
+      const colWidth = col.width ? toPixels(col.width, context2d, 'width') : (absWidth / this.columns.length)
 
       // 列分隔线
       if (index > 0) {
@@ -88,9 +96,9 @@ class Table extends Component {
 
       // 表头文字
       const headerText = new paper.PointText({
-        point: [currentX + colWidth / 2, absY + this.rowHeight / 2 + this.headerFontSize / 3],
+        point: [currentX + colWidth / 2, absY + absRowHeight / 2 + absHeaderFontSize / 3],
         content: col.title || '',
-        fontSize: this.headerFontSize,
+        fontSize: absHeaderFontSize,
         fontFamily: this.fontFamily || 'Microsoft YaHei',
         fillColor: new paper.Color(this.headerColor),
         justification: col.align || 'center',
@@ -104,13 +112,13 @@ class Table extends Component {
 
     // 数据行
     this.rows.forEach((row, rowIndex) => {
-      const rowY = absY + this.rowHeight * (rowIndex + 1)
+      const rowY = absY + absRowHeight * (rowIndex + 1)
 
       // 斑马纹背景
       if (this.striped && rowIndex % 2 === 1) {
         const stripeBg = new paper.Path.Rectangle({
           point: [absX, rowY],
-          size: [this.width, this.rowHeight]
+          size: [absWidth, absRowHeight]
         })
         stripeBg.fillColor = new paper.Color(this.stripeColor)
         stripeBg.strokeColor = new paper.Color(this.borderColor)
@@ -122,7 +130,7 @@ class Table extends Component {
       // 行分隔线
       const rowLine = new paper.Path.Line({
         from: [absX, rowY],
-        to: [absX + this.width, rowY]
+        to: [absX + absWidth, rowY]
       })
       rowLine.strokeColor = new paper.Color(this.borderColor)
       rowLine.strokeWidth = 0.5
@@ -132,12 +140,12 @@ class Table extends Component {
       // 单元格
       let cellX = absX
       this.columns.forEach((col, colIndex) => {
-        const colWidth = col.width || (this.width / this.columns.length)
+        const colWidth = col.width ? toPixels(col.width, context2d, 'width') : (absWidth / this.columns.length)
         const cellValue = row[colIndex] || ''
         const cellText = new paper.PointText({
-          point: [cellX + colWidth / 2, rowY + this.rowHeight / 2 + this.fontSize / 3],
+          point: [cellX + colWidth / 2, rowY + absRowHeight / 2 + absFontSize / 3],
           content: String(cellValue),
-          fontSize: this.fontSize,
+          fontSize: absFontSize,
           fontFamily: this.fontFamily || 'Microsoft YaHei',
           fillColor: new paper.Color(this.cellColor),
           justification: col.align || 'center'

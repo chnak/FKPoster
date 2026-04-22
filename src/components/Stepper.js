@@ -2,6 +2,8 @@
  * 步骤指示器组件
  */
 const { Component } = require('../core/Component')
+const { getFontFallbackChain, getDefaultFontFamily } = require('../fonts')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Stepper extends Component {
   constructor(config = {}) {
@@ -28,8 +30,13 @@ class Stepper extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absCircleSize = toPixels(this.circleSize, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -39,14 +46,14 @@ class Stepper extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
-    const stepWidth = this.steps.length > 1 ? this.width / (this.steps.length - 1) : this.width
-    const lineY = absY + this.circleSize / 2
+    const stepWidth = this.steps.length > 1 ? absWidth / (this.steps.length - 1) : absWidth
+    const lineY = absY + absCircleSize / 2
 
     // 绘制连接线
     if (this.steps.length > 1) {
       const line = new paper.Path.Line({
-        from: [absX + this.circleSize / 2, lineY],
-        to: [absX + this.width - this.circleSize / 2, lineY],
+        from: [absX + absCircleSize / 2, lineY],
+        to: [absX + absWidth - absCircleSize / 2, lineY],
         strokeColor: new paper.Color(this.inactiveColor),
         strokeWidth: 2,
       })
@@ -56,8 +63,8 @@ class Stepper extends Component {
       // 已完成部分的覆盖线
       if (this.currentStep > 0) {
         const completedLine = new paper.Path.Line({
-          from: [absX + this.circleSize / 2, lineY],
-          to: [absX + this.circleSize / 2 + this.currentStep * stepWidth, lineY],
+          from: [absX + absCircleSize / 2, lineY],
+          to: [absX + absCircleSize / 2 + this.currentStep * stepWidth, lineY],
           strokeColor: new paper.Color(this.completedColor),
           strokeWidth: 2,
         })
@@ -80,8 +87,8 @@ class Stepper extends Component {
 
       // 圆圈
       const circle = new paper.Path.Circle({
-        center: [stepX + this.circleSize / 2, lineY],
-        radius: this.circleSize / 2,
+        center: [stepX + absCircleSize / 2, lineY],
+        radius: absCircleSize / 2,
       })
       circle.fillColor = new paper.Color(color)
       paper.project.activeLayer.addChild(circle)
@@ -89,11 +96,12 @@ class Stepper extends Component {
 
       // 步骤编号或勾选
       const icon = i < this.currentStep ? '✓' : String(i + 1)
+      const iconFontFamily = getFontFallbackChain(this.fontFamily || getDefaultFontFamily(), icon)
       const iconText = new paper.PointText({
-        point: [stepX + this.circleSize / 2, lineY + this.circleSize / 6],
+        point: [stepX + absCircleSize / 2, lineY + absCircleSize / 6],
         content: icon,
         fontSize: 16,
-        fontFamily: this.fontFamily || 'Microsoft YaHei',
+        fontFamily: iconFontFamily,
         fillColor: new paper.Color('#ffffff'),
         justification: 'center',
       })
@@ -101,11 +109,12 @@ class Stepper extends Component {
       this._pathElements.push(iconText)
 
       // 标题
+      const titleFontFamily = getFontFallbackChain(this.fontFamily || getDefaultFontFamily(), step.title)
       const titleText = new paper.PointText({
-        point: [stepX + this.circleSize / 2, absY + this.circleSize + 20],
+        point: [stepX + absCircleSize / 2, absY + absCircleSize + 20],
         content: step.title || `Step ${i + 1}`,
         fontSize: 14,
-        fontFamily: this.fontFamily || 'Microsoft YaHei',
+        fontFamily: titleFontFamily,
         fillColor: new paper.Color(i <= this.currentStep ? '#1e293b' : '#94a3b8'),
         justification: 'center',
       })
@@ -114,11 +123,12 @@ class Stepper extends Component {
 
       // 描述
       if (step.description) {
+        const descFontFamily = getFontFallbackChain(this.fontFamily || getDefaultFontFamily(), step.description)
         const descText = new paper.PointText({
-          point: [stepX + this.circleSize / 2, absY + this.circleSize + 38],
+          point: [stepX + absCircleSize / 2, absY + absCircleSize + 38],
           content: step.description,
           fontSize: 11,
-          fontFamily: this.fontFamily || 'Microsoft YaHei',
+          fontFamily: descFontFamily,
           fillColor: new paper.Color('#94a3b8'),
           justification: 'center',
         })

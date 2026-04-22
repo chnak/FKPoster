@@ -2,6 +2,7 @@
  * 图片框组件 - 带装饰边框的图片
  */
 const { Component } = require('../core/Component')
+const { toPixels } = require('../utils/unit-converter')
 
 class ImageFrame extends Component {
   constructor(config = {}) {
@@ -27,44 +28,7 @@ class ImageFrame extends Component {
     this._paper = paper
     this._pathElements = []
     this._raster = null
-
-    // 创建外边框
-    if (this.outerWidth > 0) {
-      const outerRect = new paper.Path.Rectangle({
-        point: [-this.outerWidth, -this.outerWidth],
-        size: [this.width + this.outerWidth * 2, this.height + this.outerWidth * 2],
-        radius: this.radius + this.outerWidth,
-      })
-      outerRect.fillColor = new paper.Color(this.outerColor)
-      this._pathElements.push(outerRect)
-    }
-
-    // 创建边框
-    if (this.borderWidth > 0) {
-      const borderRect = new paper.Path.Rectangle({
-        point: [0, 0],
-        size: [this.width, this.height],
-        radius: this.radius,
-      })
-      borderRect.fillColor = new paper.Color(this.borderColor)
-      this._pathElements.push(borderRect)
-    }
-
-    // 创建裁剪矩形
-    this._clipRect = new paper.Path.Rectangle({
-      point: [0, 0],
-      size: [this.width, this.height],
-      radius: this.radius,
-    })
-
-    // 创建裁剪组
-    this._clipGroup = new paper.Group()
-    this._clipGroup.addChild(this._clipRect)
-
-    // 加载图片
-    if (this.src) {
-      this._loadImage(paper)
-    }
+    this._initialized = false
   }
 
   async _loadImage(paper) {
@@ -119,8 +83,16 @@ class ImageFrame extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
+    const absOuterWidth = toPixels(this.outerWidth, context2d, 'width')
+    const absRadius = toPixels(this.radius, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -133,9 +105,9 @@ class ImageFrame extends Component {
       // 外边框
       if (this.outerWidth > 0) {
         const outerRect = new paper.Path.Rectangle({
-          point: [absX - this.outerWidth, absY - this.outerWidth],
-          size: [this.width + this.outerWidth * 2, this.height + this.outerWidth * 2],
-          radius: this.radius + this.outerWidth,
+          point: [absX - absOuterWidth, absY - absOuterWidth],
+          size: [absWidth + absOuterWidth * 2, absHeight + absOuterWidth * 2],
+          radius: absRadius + absOuterWidth,
         })
         outerRect.fillColor = new paper.Color(this.outerColor)
         paper.project.activeLayer.addChild(outerRect)
@@ -146,8 +118,8 @@ class ImageFrame extends Component {
       if (this.borderWidth > 0) {
         const borderRect = new paper.Path.Rectangle({
           point: [absX, absY],
-          size: [this.width, this.height],
-          radius: this.radius,
+          size: [absWidth, absHeight],
+          radius: absRadius,
         })
         borderRect.fillColor = new paper.Color(this.borderColor)
         paper.project.activeLayer.addChild(borderRect)
@@ -158,8 +130,8 @@ class ImageFrame extends Component {
       const clipGroup = new paper.Group()
       const clipRect = new paper.Path.Rectangle({
         point: [absX, absY],
-        size: [this.width, this.height],
-        radius: this.radius,
+        size: [absWidth, absHeight],
+        radius: absRadius,
       })
       clipGroup.addChild(clipRect)
 
@@ -167,8 +139,8 @@ class ImageFrame extends Component {
       if (this.overlayColor && this.overlayOpacity > 0) {
         const overlayRect = new paper.Path.Rectangle({
           point: [absX, absY],
-          size: [this.width, this.height],
-          radius: this.radius,
+          size: [absWidth, absHeight],
+          radius: absRadius,
         })
         overlayRect.fillColor = new paper.Color(this.overlayColor)
         overlayRect.fillColor.alpha = this.overlayOpacity

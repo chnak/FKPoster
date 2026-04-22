@@ -3,6 +3,7 @@
  */
 const { BaseElement } = require('../core/BaseElement')
 const { getFontFallbackChain, getDefaultFontFamily } = require('../fonts')
+const { toPixels, toFontSizePixels, calculatePosition } = require('../utils/unit-converter')
 
 class TextElement extends BaseElement {
   constructor(config = {}) {
@@ -38,12 +39,14 @@ class TextElement extends BaseElement {
     if (!this._initialized) this.initialize(paper)
     if (!this._paperItem) return
 
-    // 解析位置
-    const x = this._resolvePercent(this.x, context.width)
-    const y = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
 
-    // 解析字体大小
-    const fontSize = this._resolvePercent(this.fontSize, context.height)
+    // 解析位置（支持百分比、vw、vh、rpx 等）
+    const absoluteX = toPixels(this.x, context2d, 'x')
+    const absoluteY = toPixels(this.y, context2d, 'y')
+
+    // 解析字体大小（支持百分比、rpx 等）
+    const fontSize = toFontSizePixels(this.fontSize, context2d)
 
     // 支持 anchor 定位：[0,0] = 左上角基线，[0.5, 0.5] = 中心点
     const anchorX = this.anchor ? this.anchor[0] : 0
@@ -53,8 +56,8 @@ class TextElement extends BaseElement {
     const textWidth = this._paperItem.bounds.width
     const textHeight = this._paperItem.bounds.height
 
-    const posX = x - textWidth * anchorX
-    const posY = y - textHeight * anchorY
+    const posX = absoluteX - textWidth * anchorX
+    const posY = absoluteY - textHeight * anchorY
 
     this._paperItem.bounds.x = posX
     this._paperItem.bounds.y = posY
@@ -72,13 +75,6 @@ class TextElement extends BaseElement {
     this._paperItem.opacity = this.opacity
     this._paperItem.rotation = this.rotation
     this._paperItem.visible = this.visible
-  }
-
-  _resolvePercent(value, reference) {
-    if (typeof value === 'string' && value.endsWith('%')) {
-      return (parseFloat(value) / 100) * reference
-    }
-    return value
   }
 }
 

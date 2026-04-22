@@ -23,13 +23,13 @@ class QRCode extends Component {
   initialize(paper) {
     this._paper = paper
     this._pathElements = []
-    this._raster = null
-    this._logoRaster = null
+    this._rasterImage = null
+    this._logoImage = null
   }
 
   async _ensureRaster() {
     // 生成二维码
-    if (this.content && !this._raster) {
+    if (this.content && !this._rasterImage) {
       try {
         const dataUrl = await QRCodeGenerator.toDataURL(this.content, {
           width: this.size,
@@ -40,26 +40,16 @@ class QRCode extends Component {
           },
         })
 
-        const imageData = await loadImage(dataUrl)
-        this._raster = new this._paper.Raster(imageData)
-        await new Promise((resolve, reject) => {
-          this._raster.onLoad = resolve
-          this._raster.onError = reject
-        })
+        this._rasterImage = await loadImage(dataUrl)
       } catch (err) {
         console.warn('[QRCode] Failed to generate QR code:', err.message)
       }
     }
 
     // 加载logo
-    if (this.logo && !this._logoRaster) {
+    if (this.logo && !this._logoImage) {
       try {
-        const imageData = await loadImage(this.logo)
-        this._logoRaster = new this._paper.Raster(imageData)
-        await new Promise((resolve, reject) => {
-          this._logoRaster.onLoad = resolve
-          this._logoRaster.onError = reject
-        })
+        this._logoImage = await loadImage(this.logo)
       } catch (err) {
         console.warn('[QRCode] Failed to load logo:', err.message)
       }
@@ -83,21 +73,31 @@ class QRCode extends Component {
     // 等待图片准备好
     await this._ensureRaster()
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0
+    const anchorY = this.anchor ? this.anchor[1] : 0
+
+    // 根据 anchor 计算实际绘制起始位置
+    const drawX = absX - this.size * anchorX
+    const drawY = absY - this.size * anchorY
+    const centerX = drawX + this.size / 2
+    const centerY = drawY + this.size / 2
+
     // 添加二维码
-    if (this._raster && this._raster.loaded) {
-      const raster = new this._paper.Raster(this._raster.image)
-      raster.bounds = new paper.Rectangle(absX, absY, this.size, this.size)
+    if (this._rasterImage) {
+      const raster = new this._paper.Raster(this._rasterImage)
+      raster.bounds = new paper.Rectangle(drawX, drawY, this.size, this.size)
       paper.project.activeLayer.addChild(raster)
       this._pathElements.push(raster)
     }
 
     // 添加logo
-    if (this.logo && this._logoRaster && this._logoRaster.loaded) {
+    if (this.logo && this._logoImage) {
       const ls = this.logoSize || this.size * 0.2
 
       // 白色背景
       const logoBg = new paper.Path.Rectangle({
-        point: [absX + (this.size - ls) / 2 - 5, absY + (this.size - ls) / 2 - 5],
+        point: [centerX - ls / 2 - 5, centerY - ls / 2 - 5],
         size: [ls + 10, ls + 10],
         fillColor: new paper.Color(this.backgroundColor),
         radius: 4,
@@ -107,10 +107,10 @@ class QRCode extends Component {
       this._pathElements.push(logoBg)
 
       // Logo
-      const raster = new this._paper.Raster(this._logoRaster.image)
+      const raster = new this._paper.Raster(this._logoImage)
       const scale = ls / Math.max(raster.width, raster.height)
       raster.scale(scale, scale)
-      raster.position = new paper.Point(absX + this.size / 2, absY + this.size / 2)
+      raster.position = new paper.Point(centerX, centerY)
       paper.project.activeLayer.addChild(raster)
       this._pathElements.push(raster)
     }
@@ -121,14 +121,8 @@ class QRCode extends Component {
       if (el.parent) el.remove()
     }
     this._pathElements = []
-    if (this._raster) {
-      this._raster.remove()
-      this._raster = null
-    }
-    if (this._logoRaster) {
-      this._logoRaster.remove()
-      this._logoRaster = null
-    }
+    this._rasterImage = null
+    this._logoImage = null
     super.destroy()
   }
 }

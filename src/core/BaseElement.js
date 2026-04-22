@@ -2,13 +2,15 @@
  * 基础元素类
  * 所有元素的基类，定义通用属性和方法
  */
+const { toPixels, calculatePosition } = require('../utils/unit-converter')
+
 class BaseElement {
   constructor(config = {}) {
     // 基础属性
     this.id = config.id || `element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     this.type = config.type || 'base'
 
-    // 位置（相对于父容器，支持百分比）
+    // 位置（相对于父容器，支持百分比、vw、vh、rpx 等）
     this.x = config.x !== undefined ? config.x : 0
     this.y = config.y !== undefined ? config.y : 0
 
@@ -41,11 +43,6 @@ class BaseElement {
     if (this._initialized) return
     this._paper = paper
     this._paperItem = this._createPaperItem(paper)
-    // 设置实际测量尺寸
-    if (this._paperItem && this._paperItem.bounds) {
-      this.width = this._paperItem.bounds.width
-      this.height = this._paperItem.bounds.height
-    }
     this._initialized = true
   }
 
@@ -67,30 +64,34 @@ class BaseElement {
     if (!this._initialized) this.initialize(paper)
     if (!this._paperItem) return
 
-    // 更新位置（支持百分比）
-    let absoluteX = this._resolvePercent(this.x, context.width)
-    let absoluteY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+
+    // 更新位置（支持百分比、vw、vh、rpx 等）
+    const absoluteX = toPixels(this.x, context2d, 'x')
+    const absoluteY = toPixels(this.y, context2d, 'y')
 
     // 应用锚点偏移
-    const anchorX = this.anchor ? this.anchor[0] : 0
-    const anchorY = this.anchor ? this.anchor[1] : 0
-    absoluteX = absoluteX - (this.width || 0) * anchorX
-    absoluteY = absoluteY - (this.height || 0) * anchorY
+    const { x: posX, y: posY } = calculatePosition(
+      absoluteX,
+      absoluteY,
+      this.width || 0,
+      this.height || 0,
+      this.anchor
+    )
 
-    this._paperItem.position = new paper.Point(absoluteX, absoluteY)
+    this._paperItem.position = new paper.Point(posX, posY)
     this._paperItem.opacity = this.opacity
     this._paperItem.rotation = this.rotation
     this._paperItem.visible = this.visible
   }
 
   /**
-   * 解析百分比值
+   * 解析值（兼容旧接口）
+   * @param {string|number} value - 值
+   * @param {number} reference - 参考值
    */
   _resolvePercent(value, reference) {
-    if (typeof value === 'string' && value.endsWith('%')) {
-      return (parseFloat(value) / 100) * reference
-    }
-    return value
+    return toPixels(value, { width: reference, height: reference })
   }
 
   /**
@@ -110,9 +111,10 @@ class BaseElement {
    * 获取元素的绝对位置
    */
   getAbsolutePosition(context) {
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
     return {
-      x: this._resolvePercent(this.x, context.width),
-      y: this._resolvePercent(this.y, context.height)
+      x: toPixels(this.x, context2d, 'x'),
+      y: toPixels(this.y, context2d, 'y')
     }
   }
 

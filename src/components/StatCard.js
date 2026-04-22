@@ -3,6 +3,7 @@
  */
 const { Component } = require('../core/Component')
 const { getFontFallbackChain } = require('../fonts')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class StatCard extends Component {
   constructor(config = {}) {
@@ -33,8 +34,14 @@ class StatCard extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absRadius = toPixels(this.radius, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -47,8 +54,8 @@ class StatCard extends Component {
     // 背景
     const bg = new paper.Path.Rectangle({
       point: [absX, absY],
-      size: [this.width, this.height],
-      radius: this.radius,
+      size: [absWidth, absHeight],
+      radius: absRadius,
     })
     bg.fillColor = new paper.Color(this.backgroundColor)
     bg.strokeColor = new paper.Color(this.borderColor)
@@ -57,11 +64,11 @@ class StatCard extends Component {
     this._pathElements.push(bg)
 
     // 布局参数
-    const paddingX = Math.max(16, this.width * 0.08)
-    const iconSize = Math.min(24, this.height * 0.22)
-    const valueSize = Math.min(24, this.height * 0.2)
-    const labelSize = Math.min(11, this.height * 0.1)
-    const changeSize = Math.min(11, this.height * 0.09)
+    const paddingX = Math.max(16, absWidth * 0.08)
+    const iconSize = Math.min(24, absHeight * 0.22)
+    const valueSize = Math.min(24, absHeight * 0.2)
+    const labelSize = Math.min(11, absHeight * 0.1)
+    const changeSize = Math.min(11, absHeight * 0.09)
 
     // 计算总内容高度
     const iconHeight = this.icon ? iconSize : 0
@@ -72,7 +79,7 @@ class StatCard extends Component {
     const totalContentHeight = iconHeight + labelHeight + valueHeight + changeHeight + gaps
 
     // 让内容在卡片内垂直居中
-    const contentTopY = absY + (this.height - totalContentHeight) / 2
+    const contentTopY = absY + (absHeight - totalContentHeight) / 2
     let currentY = contentTopY
 
     // 图标 - 在左上角，使用字体回退链
@@ -107,7 +114,7 @@ class StatCard extends Component {
       point: [absX + paddingX, currentY + valueSize],
       content: this.value,
       fontSize: valueSize,
-      fontFamily: this.fontFamily || 'Microsoft YaHei',
+      fontFamily: this.fontFamily || 'Microsoft Ya Hei',
       fillColor: new paper.Color('#ffffff'),
       fontWeight: 'bold',
     })

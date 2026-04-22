@@ -4,6 +4,7 @@
 const { Component } = require('../core/Component')
 const { CircleElement } = require('../elements/CircleElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels } = require('../utils/unit-converter')
 
 class Avatar extends Component {
   constructor(config = {}) {
@@ -25,11 +26,11 @@ class Avatar extends Component {
   }
 
   initialize(paper) {
-    // 圆形背景
+    // 圆形背景 - size 会在 render 时转换
     this._bgElement = new CircleElement({
       x: 0,
       y: 0,
-      radius: this.size / 2,
+      radius: 0, // 临时值，会在 render 时设置
       fillColor: this.backgroundColor,
       strokeColor: this.borderColor,
       strokeWidth: this.borderWidth,
@@ -37,13 +38,13 @@ class Avatar extends Component {
     })
     this._bgElement.initialize(paper)
 
-    // 首字母
+    // 首字母 - 垂直居中
     if (!this.src && this.initials) {
       this._textElement = new TextElement({
         x: 0,
-        y: this.size * 0.15,
+        y: 0, // 临时值，会在 render 时设置
         text: this.initials.charAt(0).toUpperCase(),
-        fontSize: this.size * 0.4,
+        fontSize: 0, // 临时值，会在 render 时设置
         fontFamily: this.fontFamily,
         color: this.color,
         textAlign: 'center',
@@ -57,20 +58,27 @@ class Avatar extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+    const absSize = toPixels(this.size, context2d, 'width')
 
     // 圆形背景
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(absX, absY)
+      this._bgElement.x = absX
+      this._bgElement.y = absY
+      this._bgElement.radius = absSize / 2
+      this._bgElement.render(paper, context)
     }
 
-    // 首字母 - 使用 fontSize/3 偏移实现视觉居中
+    // 首字母 - 与圆形中心对齐
     if (this._textElement && this._textElement._paperItem) {
-      const fontSize = this.size * 0.4
+      const fontSize = absSize * 0.4
       this._textElement.x = absX
       this._textElement.y = absY + fontSize / 3
+      this._textElement.fontSize = fontSize
       this._textElement.render(paper, context)
+      this._textElement._paperItem.bringToFront()
     }
   }
 

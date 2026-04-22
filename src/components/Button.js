@@ -6,6 +6,7 @@ const { Component } = require('../core/Component')
 const { RectElement } = require('../elements/RectElement')
 const { TextElement } = require('../elements/TextElement')
 const { ImageElement } = require('../elements/ImageElement')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Button extends Component {
   constructor(config = {}) {
@@ -32,59 +33,25 @@ class Button extends Component {
     this.textAlign = 'center'
   }
 
-  _createPaperItem(paper) {
-    // 计算文字宽度
-    const textStr = String(this.text || '')
-    const chineseChars = (textStr.match(/[\u4e00-\u9fa5]/g) || []).length
-    const otherChars = textStr.length - chineseChars
-    const textWidth = chineseChars * this.fontSize * 1.0 + otherChars * this.fontSize * 0.5
-
-    // 图标宽度
-    const iconWidth = this.icon ? Math.min(this.height * 0.5, this.fontSize) + 8 : 0
-
-    // 计算最终宽度
-    this._finalWidth = typeof this.width === 'number'
-      ? this.width
-      : (textWidth + this.padding * 2 + iconWidth)
-    this._finalHeight = this.height
-
-    // 创建背景矩形
-    const bg = new RectElement({
+  initialize(paper) {
+    // 创建占位的背景
+    this._bgElement = new RectElement({
       x: 0,
       y: 0,
-      width: this._finalWidth,
-      height: this._finalHeight,
+      width: 1,
+      height: 1,
       fillColor: this.backgroundColor,
       borderColor: this.borderColor,
-      borderWidth: this.borderWidth,
-      borderRadius: this.radius,
+      borderWidth: 0,
+      borderRadius: 0,
       opacity: this.opacity,
     })
-
-    return bg
-  }
-
-  initialize(paper) {
-    // 初始化背景
-    if (!this._bgElement) {
-      this._bgElement = new RectElement({
-        x: 0,
-        y: 0,
-        width: this._finalWidth || 200,
-        height: this._finalHeight || 60,
-        fillColor: this.backgroundColor,
-        borderColor: this.borderColor,
-        borderWidth: this.borderWidth,
-        borderRadius: this.radius,
-        opacity: this.opacity,
-      })
-    }
     this._bgElement.initialize(paper)
 
-    // 初始化文字 - 居中定位
+    // 创建文字元素（临时值）
     this._textElement = new TextElement({
-      x: (this._finalWidth || 200) / 2,
-      y: (this._finalHeight || 60) / 2,
+      x: 0,
+      y: 0,
       text: this.text,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
@@ -95,18 +62,13 @@ class Button extends Component {
     })
     this._textElement.initialize(paper)
 
-    // 初始化图标（如果是URL图片）
+    // 创建图标元素（如果是URL图片）
     if (this.icon && (this.icon.startsWith('http') || this.icon.startsWith('data:'))) {
-      const iconSize = Math.min(this._finalHeight * 0.5, this.fontSize)
-      const iconX = this.iconPosition === 'left'
-        ? this.padding + iconSize / 2
-        : (this._finalWidth || 200) - this.padding - iconSize / 2
-
       this._iconElement = new ImageElement({
-        x: iconX,
-        y: (this._finalHeight || 60) / 2,
-        width: iconSize,
-        height: iconSize,
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
         src: this.icon,
         anchor: [0.5, 0.5],
         opacity: this.opacity,
@@ -118,35 +80,71 @@ class Button extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+
     // 计算绝对位置
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
 
-    // 更新背景位置 - 居中定位
+    // 转换单位
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
+    const absPadding = toPixels(this.padding, context2d, 'width')
+    const absRadius = toPixels(this.radius, context2d, 'width')
+    const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+
+    // 计算文字宽度
+    const textStr = String(this.text || '')
+    const chineseChars = (textStr.match(/[\u4e00-\u9fa5]/g) || []).length
+    const otherChars = textStr.length - chineseChars
+    const textWidth = chineseChars * absFontSize * 1.0 + otherChars * absFontSize * 0.5
+
+    // 图标宽度
+    const iconWidth = this.icon ? Math.min(absHeight * 0.5, absFontSize) + 8 : 0
+
+    // 计算最终宽度
+    const finalWidth = typeof this.width === 'number'
+      ? toPixels(this.width, context2d, 'width')
+      : (textWidth + absPadding * 2 + iconWidth)
+    const finalHeight = absHeight
+
+    // 更新背景
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(
-        absX + (this._finalWidth || 200) / 2,
-        absY + (this._finalHeight || 60) / 2
-      )
+      this._bgElement.width = finalWidth
+      this._bgElement.height = finalHeight
+      this._bgElement.borderRadius = absRadius
+      this._bgElement.borderWidth = absBorderWidth
+      // Use center positioning with anchor [0.5, 0.5]
+      this._bgElement.x = absX + finalWidth / 2
+      this._bgElement.y = absY + finalHeight / 2
+      this._bgElement.anchor = [0.5, 0.5]
+      this._bgElement.render(paper, context)
     }
 
-    // 更新文字位置 - 居中定位
+    // 更新文字位置
     if (this._textElement && this._textElement._paperItem) {
-      this._textElement.x = absX + (this._finalWidth || 200) / 2
-      this._textElement.y = absY + (this._finalHeight || 60) / 2
+      this._textElement.x = absX + finalWidth / 2
+      this._textElement.y = absY + finalHeight / 2
+      this._textElement.fontSize = absFontSize
       this._textElement.render(paper, context)
+      // 确保文字在最上层
+      this._textElement._paperItem.bringToFront()
     }
 
-    // 更新图标位置 - 居中定位
+    // 更新图标位置
     if (this._iconElement && this._iconElement._paperItem) {
-      const iconSize = Math.min(this._finalHeight * 0.5, this.fontSize)
+      const iconSize = Math.min(finalHeight * 0.5, absFontSize)
       const iconX = this.iconPosition === 'left'
-        ? absX + this.padding + iconSize / 2
-        : absX + (this._finalWidth || 200) - this.padding - iconSize / 2
+        ? absX + absPadding + iconSize / 2
+        : absX + finalWidth - absPadding - iconSize / 2
 
       this._iconElement.x = iconX
-      this._iconElement.y = absY + (this._finalHeight || 60) / 2
+      this._iconElement.y = absY + finalHeight / 2
+      this._iconElement.width = iconSize
+      this._iconElement.height = iconSize
       this._iconElement.render(paper, context)
+      // 确保图标在最上层
+      this._iconElement._paperItem.bringToFront()
     }
   }
 

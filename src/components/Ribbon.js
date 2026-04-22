@@ -2,6 +2,7 @@
  * 丝带/飘带组件
  */
 const { Component } = require('../core/Component')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Ribbon extends Component {
   constructor(config = {}) {
@@ -38,8 +39,14 @@ class Ribbon extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
+    const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -50,18 +57,18 @@ class Ribbon extends Component {
     if (!paper.project || !paper.project.activeLayer) return
 
     if (this.style === 'diagonal') {
-      this._renderDiagonal(paper, absX, absY)
+      this._renderDiagonal(paper, absX, absY, absWidth, absFontSize, absBorderWidth)
     } else if (this.style === 'corner') {
-      this._renderCorner(paper, absX, absY)
+      this._renderCorner(paper, absX, absY, absWidth, absFontSize, absBorderWidth)
     } else {
-      this._renderFold(paper, absX, absY)
+      this._renderFold(paper, absX, absY, absWidth, absFontSize, absBorderWidth)
     }
   }
 
-  _renderDiagonal(paper, absX, absY) {
+  _renderDiagonal(paper, absX, absY, absWidth, absFontSize, absBorderWidth) {
     const ribbonHeight = 60
-    const diagonalLength = Math.sqrt(this.width ** 2 + ribbonHeight ** 2)
-    const angle = Math.atan2(ribbonHeight, this.width) * 180 / Math.PI
+    const diagonalLength = Math.sqrt(absWidth ** 2 + ribbonHeight ** 2)
+    const angle = Math.atan2(ribbonHeight, absWidth) * 180 / Math.PI
 
     const ribbon = new paper.Path.Rectangle({
       point: [absX, absY],
@@ -71,16 +78,16 @@ class Ribbon extends Component {
     ribbon.fillColor = new paper.Color(this.backgroundColor)
     if (this.borderColor) {
       ribbon.strokeColor = new paper.Color(this.borderColor)
-      ribbon.strokeWidth = this.borderWidth
+      ribbon.strokeWidth = absBorderWidth
     }
     ribbon.rotate(angle, new paper.Point(absX, absY))
     paper.project.activeLayer.addChild(ribbon)
     this._pathElements.push(ribbon)
 
     const textItem = new paper.PointText({
-      point: [absX + diagonalLength / 2, absY + ribbonHeight / 2 + this.fontSize / 3],
+      point: [absX + diagonalLength / 2, absY + ribbonHeight / 2 + absFontSize / 3],
       content: this.text,
-      fontSize: this.fontSize,
+      fontSize: absFontSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
       fillColor: new paper.Color(this.color),
       justification: 'center',
@@ -90,8 +97,8 @@ class Ribbon extends Component {
     this._pathElements.push(textItem)
   }
 
-  _renderCorner(paper, absX, absY) {
-    const ribbonWidth = this.width
+  _renderCorner(paper, absX, absY, absWidth, absFontSize, absBorderWidth) {
+    const ribbonWidth = absWidth
     const ribbonHeight = 50
     const foldSize = 20
 
@@ -103,7 +110,7 @@ class Ribbon extends Component {
     })
     if (this.borderColor) {
       ribbon.strokeColor = new paper.Color(this.borderColor)
-      ribbon.strokeWidth = this.borderWidth
+      ribbon.strokeWidth = absBorderWidth
     }
     paper.project.activeLayer.addChild(ribbon)
     this._pathElements.push(ribbon)
@@ -130,9 +137,9 @@ class Ribbon extends Component {
 
     // 文字
     const textItem = new paper.PointText({
-      point: [absX + ribbonWidth / 2, absY + ribbonHeight / 2 + this.fontSize / 3],
+      point: [absX + ribbonWidth / 2, absY + ribbonHeight / 2 + absFontSize / 3],
       content: this.text,
-      fontSize: this.fontSize,
+      fontSize: absFontSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
       fillColor: new paper.Color(this.color),
       justification: 'center',
@@ -141,19 +148,19 @@ class Ribbon extends Component {
     this._pathElements.push(textItem)
   }
 
-  _renderFold(paper, absX, absY) {
+  _renderFold(paper, absX, absY, absWidth, absFontSize, absBorderWidth) {
     const ribbonHeight = 50
     const foldSize = 15
 
     // 主丝带
     const ribbon = new paper.Path.Rectangle({
       point: [absX, absY],
-      size: [this.width, ribbonHeight],
+      size: [absWidth, ribbonHeight],
       fillColor: new paper.Color(this.backgroundColor),
     })
     if (this.borderColor) {
       ribbon.strokeColor = new paper.Color(this.borderColor)
-      ribbon.strokeWidth = this.borderWidth
+      ribbon.strokeWidth = absBorderWidth
     }
     paper.project.activeLayer.addChild(ribbon)
     this._pathElements.push(ribbon)
@@ -170,9 +177,9 @@ class Ribbon extends Component {
 
     // 右上角折叠三角 - 向右上角折叠
     const rightFold = new paper.Path()
-    rightFold.add(new paper.Point(absX + this.width, absY))
-    rightFold.add(new paper.Point(absX + this.width, absY - foldSize))
-    rightFold.add(new paper.Point(absX + this.width + foldSize, absY))
+    rightFold.add(new paper.Point(absX + absWidth, absY))
+    rightFold.add(new paper.Point(absX + absWidth, absY - foldSize))
+    rightFold.add(new paper.Point(absX + absWidth + foldSize, absY))
     rightFold.closed = true
     rightFold.fillColor = this._darkenColor(paper, this.backgroundColor, 0.7)
     paper.project.activeLayer.addChild(rightFold)
@@ -180,9 +187,9 @@ class Ribbon extends Component {
 
     // 文字
     const textItem = new paper.PointText({
-      point: [absX + this.width / 2, absY + ribbonHeight / 2 + this.fontSize / 3],
+      point: [absX + absWidth / 2, absY + ribbonHeight / 2 + absFontSize / 3],
       content: this.text,
-      fontSize: this.fontSize,
+      fontSize: absFontSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
       fillColor: new paper.Color(this.color),
       justification: 'center',

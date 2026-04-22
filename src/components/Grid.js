@@ -2,6 +2,7 @@
  * 网格布局组件
  */
 const { Component } = require('../core/Component')
+const { toPixels } = require('../utils/unit-converter')
 
 class Grid extends Component {
   constructor(config = {}) {
@@ -28,11 +29,21 @@ class Grid extends Component {
     this._pathElements = []
   }
 
-  getLayout() {
-    const totalGapX = this.gapX * (this.columns - 1)
-    const totalGapY = this.gapY * (this.rows - 1)
-    const cellWidth = (this.width - totalGapX) / this.columns
-    const cellHeight = (this.height - totalGapY) / this.rows
+  getLayout(context = {}) {
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absGapX = toPixels(this.gapX, context2d, 'width')
+    const absGapY = toPixels(this.gapY, context2d, 'height')
+
+    const totalGapX = absGapX * (this.columns - 1)
+    const totalGapY = absGapY * (this.rows - 1)
+    const cellWidth = (absWidth - totalGapX) / this.columns
+    const cellHeight = (absHeight - totalGapY) / this.rows
 
     const cellPositions = []
     const totalCells = this.columns * this.rows
@@ -48,19 +59,19 @@ class Grid extends Component {
         col = Math.floor(i / this.rows)
       }
 
-      const cellX = col * (cellWidth + this.gapX)
-      const cellY = row * (cellHeight + this.gapY)
+      const cellX = col * (cellWidth + absGapX)
+      const cellY = row * (cellHeight + absGapY)
 
       cellPositions.push({
         index: i,
         column: col,
         row: row,
-        x: this.x + cellX,
-        y: this.y + cellY,
+        x: absX + cellX,
+        y: absY + cellY,
         width: cellWidth,
         height: cellHeight,
-        centerX: this.x + cellX + cellWidth / 2,
-        centerY: this.y + cellY + cellHeight / 2,
+        centerX: absX + cellX + cellWidth / 2,
+        centerY: absY + cellY + cellHeight / 2,
       })
     }
 
@@ -71,16 +82,23 @@ class Grid extends Component {
       columns: this.columns,
       rows: this.rows,
       totalCells,
-      totalWidth: this.width,
-      totalHeight: this.height,
+      totalWidth: absWidth,
+      totalHeight: absHeight,
     }
   }
 
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absRadius = toPixels(this.radius, context2d, 'width')
+    const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -94,8 +112,8 @@ class Grid extends Component {
     if (this.backgroundColor) {
       const bg = new paper.Path.Rectangle({
         point: [absX, absY],
-        size: [this.width, this.height],
-        radius: this.radius,
+        size: [absWidth, absHeight],
+        radius: absRadius,
       })
       bg.fillColor = new paper.Color(this.backgroundColor)
       paper.project.activeLayer.addChild(bg)
@@ -106,12 +124,12 @@ class Grid extends Component {
     if (this.borderColor && this.borderWidth > 0) {
       const border = new paper.Path.Rectangle({
         point: [absX, absY],
-        size: [this.width, this.height],
-        radius: this.radius,
+        size: [absWidth, absHeight],
+        radius: absRadius,
       })
       border.fillColor = new paper.Color('transparent')
       border.strokeColor = new paper.Color(this.borderColor)
-      border.strokeWidth = this.borderWidth
+      border.strokeWidth = absBorderWidth
       paper.project.activeLayer.addChild(border)
       this._pathElements.push(border)
     }

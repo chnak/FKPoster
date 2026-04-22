@@ -4,7 +4,15 @@
       "Bash(cd D:/Date/20260408/FKPoster && node examples/test-positions.js)",
       "Bash(cd D:/Date/20260408/FKPoster && npm install 2>&1 | tail -20)",
       "Bash(cd D:/Date/20260408/FKPoster && npm install @napi-rs/canvas fontkit jsdom paper qrcode --save 2>&1 | tail -10)",
-      "Bash(cd D:/Date/20260408/FKPoster && node examples/test-positions.js 2>&1)"
+      "Bash(cd D:/Date/20260408/FKPoster && node examples/test-positions.js 2>&1)",
+      "Bash(cd D:/Date/20260408/FKPoster && node examples/style-showcase.js 2>&1)",
+      "Bash(cd D:/Date/20260408/FKPoster && node examples/test-notification.js 2>&1)",
+      "Bash(node examples/debug-timeline.js 2>&1)",
+      "Bash(node examples/namecard-demo.js 2>&1)",
+      "Bash(node examples/00-unit-test.js 2>&1)",
+      "Bash(node examples/09-timeline.js 2>&1 | head -20)",
+      "Bash(cd D:/Date/20260408/FKPoster && node -e \"\nconst { parseUnit, toPixels } = require\\('./src/utils/unit-converter'\\);\n\nconsole.log\\('parseUnit\\(\\\\\"40%\\\\\"\\):', parseUnit\\('40%'\\)\\);\nconsole.log\\('parseUnit\\(\\\\\"3%\\\\\"\\):', parseUnit\\('3%'\\)\\);\nconsole.log\\('toPixels\\(\\\\\"40%\\\\\", {width: 750, height: 1000}, \\\\\"width\\\\\"\\):', toPixels\\('40%', {width: 750, height: 1000}, 'width'\\)\\);\nconsole.log\\('toPixels\\(\\\\\"3%\\\\\", {width: 750, height: 1000}, \\\\\"width\\\\\"\\):', toPixels\\('3%', {width: 750, height: 1000}, 'width'\\)\\);\n\" 2>&1)",
+      "Bash(ls output/svg-test/*.svg | head -10)"
     ]
   }
 }

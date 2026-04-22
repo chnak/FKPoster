@@ -2,6 +2,7 @@
  * 图片元素
  */
 const { BaseElement } = require('../core/BaseElement')
+const { toPixels } = require('../utils/unit-converter')
 
 class ImageElement extends BaseElement {
   constructor(config = {}) {
@@ -46,19 +47,15 @@ class ImageElement extends BaseElement {
   render(paper, context = {}) {
     if (!this.visible) return
 
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+
     // 处理百分比位置
-    const x = this._resolvePercent(this.x, context.width)
-    const y = this._resolvePercent(this.y, context.height)
+    const x = toPixels(this.x, context2d, 'x')
+    const y = toPixels(this.y, context2d, 'y')
 
     // 处理百分比尺寸
-    const width = this._resolvePercent(
-      typeof this.width === 'string' ? this.width : this.width,
-      context.width
-    )
-    const height = this._resolvePercent(
-      typeof this.height === 'string' ? this.height : this.height,
-      context.height
-    )
+    const width = toPixels(this.width, context2d, 'width')
+    const height = toPixels(this.height, context2d, 'height')
 
     // 支持 anchor 定位
     const anchorX = this.anchor ? this.anchor[0] : 0
@@ -96,13 +93,6 @@ class ImageElement extends BaseElement {
       this._paperItem.rotation = this.rotation
       this._paperItem.visible = this.visible
     }
-  }
-
-  _resolvePercent(value, reference) {
-    if (typeof value === 'string' && value.endsWith('%')) {
-      return (parseFloat(value) / 100) * reference
-    }
-    return value
   }
 
   destroy() {

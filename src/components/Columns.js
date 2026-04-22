@@ -2,6 +2,7 @@
  * 分栏布局组件
  */
 const { Component } = require('../core/Component')
+const { toPixels } = require('../utils/unit-converter')
 
 class Columns extends Component {
   constructor(config = {}) {
@@ -27,44 +28,61 @@ class Columns extends Component {
     this._pathElements = []
   }
 
-  getLayout() {
-    const totalGap = this.gap * (this.columnCount - 1)
-    const columnWidth = (this.width - totalGap) / this.columnCount
+  getLayout(context = {}) {
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absGap = toPixels(this.gap, context2d, 'width')
+
+    const totalGap = absGap * (this.columnCount - 1)
+    const columnWidth = (absWidth - totalGap) / this.columnCount
 
     const columnPositions = []
     for (let i = 0; i < this.columnCount; i++) {
-      const colX = (columnWidth + this.gap) * i
+      const colX = (columnWidth + absGap) * i
       let colY
       if (this.align === 'center') {
-        colY = (this.height - this.height) / 2
+        colY = (absHeight - absHeight) / 2
       } else if (this.align === 'bottom') {
-        colY = this.height - this.height
+        colY = absHeight - absHeight
       } else {
         colY = 0
       }
 
       columnPositions.push({
         index: i,
-        x: this.x + colX,
-        y: this.y + colY,
+        x: absX + colX,
+        y: absY + colY,
         width: columnWidth,
-        height: this.height,
+        height: absHeight,
       })
     }
 
     return {
       columnPositions,
       columnWidth,
-      totalWidth: this.width,
-      totalHeight: this.height,
+      totalWidth: absWidth,
+      totalHeight: absHeight,
     }
   }
 
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absGap = toPixels(this.gap, context2d, 'width')
+    const absRadius = toPixels(this.radius, context2d, 'width')
+    const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -78,8 +96,8 @@ class Columns extends Component {
     if (this.backgroundColor) {
       const bg = new paper.Path.Rectangle({
         point: [absX, absY],
-        size: [this.width, this.height],
-        radius: this.radius,
+        size: [absWidth, absHeight],
+        radius: absRadius,
       })
       bg.fillColor = new paper.Color(this.backgroundColor)
       paper.project.activeLayer.addChild(bg)
@@ -90,25 +108,25 @@ class Columns extends Component {
     if (this.borderColor && this.borderWidth > 0) {
       const border = new paper.Path.Rectangle({
         point: [absX, absY],
-        size: [this.width, this.height],
-        radius: this.radius,
+        size: [absWidth, absHeight],
+        radius: absRadius,
       })
       border.fillColor = new paper.Color('transparent')
       border.strokeColor = new paper.Color(this.borderColor)
-      border.strokeWidth = this.borderWidth
+      border.strokeWidth = absBorderWidth
       paper.project.activeLayer.addChild(border)
       this._pathElements.push(border)
     }
 
     // 分割线
-    const totalGap = this.gap * (this.columnCount - 1)
-    const columnWidth = (this.width - totalGap) / this.columnCount
+    const totalGap = absGap * (this.columnCount - 1)
+    const columnWidth = (absWidth - totalGap) / this.columnCount
 
     for (let i = 1; i < this.columnCount; i++) {
-      const lineX = absX + columnWidth * i + this.gap * (i - 1) + this.gap / 2
+      const lineX = absX + columnWidth * i + absGap * (i - 1) + absGap / 2
       const line = new paper.Path.Line({
         from: [lineX, absY + 20],
-        to: [lineX, absY + this.height - 20],
+        to: [lineX, absY + absHeight - 20],
       })
       line.strokeColor = new paper.Color('#e0e0e0')
       line.strokeWidth = 1

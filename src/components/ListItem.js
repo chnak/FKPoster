@@ -4,6 +4,7 @@
 const { Component } = require('../core/Component')
 const { RectElement } = require('../elements/RectElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class ListItem extends Component {
   constructor(config = {}) {
@@ -33,20 +34,20 @@ class ListItem extends Component {
     this._bgElement = new RectElement({
       x: 0,
       y: 0,
-      width: this.width,
-      height: this.height,
+      width: 1,
+      height: 1,
       fillColor: this.backgroundColor,
       borderColor: this.borderColor,
-      borderWidth: 1,
-      borderRadius: this.radius,
+      borderWidth: 0,
+      borderRadius: 0,
       opacity: this.opacity,
     })
     this._bgElement.initialize(paper)
 
     // 图标
     this._iconElement = new TextElement({
-      x: 15,
-      y: 15,
+      x: 0,
+      y: 0,
       text: this.icon,
       fontSize: 20,
       fontFamily: this.fontFamily,
@@ -58,8 +59,8 @@ class ListItem extends Component {
 
     // 标题
     this._titleElement = new TextElement({
-      x: 50,
-      y: 12,
+      x: 0,
+      y: 0,
       text: this.title || 'List Item',
       fontSize: 16,
       fontFamily: this.fontFamily,
@@ -70,10 +71,11 @@ class ListItem extends Component {
     this._titleElement.initialize(paper)
 
     // 描述
+    this._descElement = null
     if (this.description) {
       this._descElement = new TextElement({
-        x: 50,
-        y: 34,
+        x: 0,
+        y: 0,
         text: this.description,
         fontSize: 12,
         fontFamily: this.fontFamily,
@@ -85,12 +87,15 @@ class ListItem extends Component {
     }
 
     // 徽章
+    this._badgeBgElement = null
+    this._badgeElement = null
+    this._badgeWidth = 0
     if (this.badge) {
       const badgeWidth = this.badge.length * 10 + 20
       this._badgeWidth = badgeWidth
       this._badgeBgElement = new RectElement({
         x: 0,
-        y: (this.height - 24) / 2,
+        y: 0,
         width: badgeWidth,
         height: 24,
         fillColor: this.badgeColor,
@@ -101,12 +106,13 @@ class ListItem extends Component {
 
       this._badgeElement = new TextElement({
         x: 0,
-        y: (this.height - 24) / 2,
+        y: 0,
         text: this.badge,
         fontSize: 12,
         fontFamily: this.fontFamily,
         color: '#ffffff',
         textAlign: 'center',
+        anchor: [0.5, 0.5],
         opacity: this.opacity,
       })
       this._badgeElement.initialize(paper)
@@ -116,13 +122,23 @@ class ListItem extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absRadius = toPixels(this.radius, context2d, 'width')
 
     // 背景 - 使用左上角定位
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.bounds.x = absX
-      this._bgElement._paperItem.bounds.y = absY
+      this._bgElement.width = absWidth
+      this._bgElement.height = absHeight
+      this._bgElement.borderRadius = absRadius
+      this._bgElement.x = absX
+      this._bgElement.y = absY
+      this._bgElement.render(paper, context)
     }
 
     // 图标
@@ -130,6 +146,7 @@ class ListItem extends Component {
       this._iconElement.x = absX + 15
       this._iconElement.y = absY + 15
       this._iconElement.render(paper, context)
+      this._iconElement._paperItem.bringToFront()
     }
 
     // 标题
@@ -137,6 +154,7 @@ class ListItem extends Component {
       this._titleElement.x = absX + 50
       this._titleElement.y = absY + 12
       this._titleElement.render(paper, context)
+      this._titleElement._paperItem.bringToFront()
     }
 
     // 描述
@@ -144,22 +162,26 @@ class ListItem extends Component {
       this._descElement.x = absX + 50
       this._descElement.y = absY + 34
       this._descElement.render(paper, context)
+      this._descElement._paperItem.bringToFront()
     }
 
     // 徽章 - 右对齐，使用左上角定位
     if (this._badgeBgElement && this._badgeBgElement._paperItem) {
-      const badgeX = absX + this.width - this._badgeWidth - 15
-      const badgeY = absY + (this.height - 24) / 2
-      this._badgeBgElement._paperItem.bounds.x = badgeX
-      this._badgeBgElement._paperItem.bounds.y = badgeY
+      const badgeX = absX + absWidth - this._badgeWidth - 15
+      const badgeY = absY + (absHeight - 24) / 2
+      this._badgeBgElement.x = badgeX
+      this._badgeBgElement.y = badgeY
+      this._badgeBgElement.render(paper, context)
+      this._badgeBgElement._paperItem.bringToFront()
     }
 
     if (this._badgeElement && this._badgeElement._paperItem) {
-      const badgeX = absX + this.width - this._badgeWidth - 15
-      const badgeY = absY + (this.height - 24) / 2
-      this._badgeElement.x = badgeX
-      this._badgeElement.y = badgeY
+      const badgeX = absX + absWidth - this._badgeWidth - 15
+      const badgeY = absY + (absHeight - 24) / 2
+      this._badgeElement.x = badgeX + this._badgeWidth / 2  // 居中
+      this._badgeElement.y = badgeY + 12  // 垂直居中 (24/2 + 基线偏移)
       this._badgeElement.render(paper, context)
+      this._badgeElement._paperItem.bringToFront()
     }
   }
 

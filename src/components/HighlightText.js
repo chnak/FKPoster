@@ -2,6 +2,7 @@
  * 高亮文字组件 - 荧光笔效果
  */
 const { Component } = require('../core/Component')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class HighlightText extends Component {
   constructor(config = {}) {
@@ -29,8 +30,14 @@ class HighlightText extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
+    const absHighlightWidth = toPixels(this.highlightWidth, context2d, 'width')
+    const absStrokeWidth = toPixels(this.strokeWidth, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -42,9 +49,9 @@ class HighlightText extends Component {
 
     // 创建文字
     const textItem = new paper.PointText({
-      point: [absX, absY + this.fontSize],
+      point: [absX, absY + absFontSize],
       content: this.text,
-      fontSize: this.fontSize,
+      fontSize: absFontSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
       fillColor: new paper.Color(this.color),
       justification: 'left',
@@ -59,9 +66,9 @@ class HighlightText extends Component {
     switch (this.highlightStyle) {
       case 'marker':
         // 荧光笔效果 - 倾斜的矩形
-        const markerHeight = this.fontSize * 0.8
+        const markerHeight = absFontSize * 0.8
         const marker = new paper.Path.Rectangle({
-          point: [textBounds.x - 5, textBounds.y + this.fontSize * 0.3],
+          point: [textBounds.x - 5, textBounds.y + absFontSize * 0.3],
           size: [textBounds.width + 10, markerHeight],
         })
         marker.fillColor = new paper.Color(this.highlightColor)
@@ -73,13 +80,13 @@ class HighlightText extends Component {
 
       case 'underline':
         // 下划线
-        const underlineY = textBounds.y + this.fontSize + 5
+        const underlineY = textBounds.y + absFontSize + 5
         const underline = new paper.Path.Line(
           [textBounds.x, underlineY],
           [textBounds.x + textBounds.width, underlineY]
         )
         underline.strokeColor = new paper.Color(this.highlightColor)
-        underline.strokeWidth = this.highlightWidth
+        underline.strokeWidth = absHighlightWidth
         underline.strokeCap = 'round'
         paper.project.activeLayer.addChild(underline)
         this._pathElements.push(underline)
@@ -90,7 +97,7 @@ class HighlightText extends Component {
         const padding = 8
         const bg = new paper.Path.Rectangle({
           point: [textBounds.x - padding, textBounds.y - 5],
-          size: [textBounds.width + padding * 2, this.fontSize + 10],
+          size: [textBounds.width + padding * 2, absFontSize + 10],
           radius: 4,
         })
         bg.fillColor = new paper.Color(this.highlightColor)
@@ -102,15 +109,15 @@ class HighlightText extends Component {
       case 'stroke':
         // 描边效果
         textItem.strokeColor = new paper.Color(this.highlightColor)
-        textItem.strokeWidth = this.strokeWidth
+        textItem.strokeWidth = absStrokeWidth
         break
 
       case 'neon':
         // 霓虹效果
         textItem.strokeColor = new paper.Color(this.highlightColor)
-        textItem.strokeWidth = this.strokeWidth * 2
+        textItem.strokeWidth = absStrokeWidth * 2
         const neonClone = textItem.clone()
-        neonClone.strokeWidth = this.strokeWidth * 4
+        neonClone.strokeWidth = absStrokeWidth * 4
         neonClone.strokeColor = new paper.Color(this.highlightColor)
         neonClone.fillColor = null
         neonClone.opacity = 0.3

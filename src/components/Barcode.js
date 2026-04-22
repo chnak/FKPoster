@@ -3,6 +3,7 @@
  */
 const { Component } = require('../core/Component')
 const { getFontFallbackChain } = require('../fonts')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Barcode extends Component {
   constructor(config = {}) {
@@ -28,8 +29,14 @@ class Barcode extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -40,9 +47,9 @@ class Barcode extends Component {
     if (!paper.project || !paper.project.activeLayer) return
 
     const textHeight = this.showText ? 25 : 0
-    const barHeight = this.height - textHeight
+    const barHeight = absHeight - textHeight
     const padding = 10
-    const barAreaWidth = this.width - padding * 2
+    const barAreaWidth = absWidth - padding * 2
     const barCount = this.content.length * 3  // 每个字符用3个bar表示
     const barUnitWidth = barAreaWidth / barCount
     const barWidth = barUnitWidth * 0.7  // bar占80%宽度，留20%间距
@@ -78,9 +85,9 @@ class Barcode extends Component {
     if (this.showText) {
       const fontFamily = getFontFallbackChain('monospace', this.content)
       const textItem = new paper.PointText({
-        point: [absX + this.width / 2, absY + barHeight + this.fontSize + 2],
+        point: [absX + absWidth / 2, absY + barHeight + absFontSize + 2],
         content: this.content,
-        fontSize: this.fontSize,
+        fontSize: absFontSize,
         fontFamily,
         fillColor: new paper.Color(this.textColor),
         justification: 'center',

@@ -2,6 +2,7 @@
  * 星级评分组件
  */
 const { Component } = require('../core/Component')
+const { toPixels } = require('../utils/unit-converter')
 
 class Rating extends Component {
   constructor(config = {}) {
@@ -26,8 +27,13 @@ class Rating extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absSize = toPixels(this.size, context2d, 'width')
+    const absGap = toPixels(this.gap, context2d, 'width')
 
     // 清理旧星星
     for (const star of this._stars) {
@@ -38,12 +44,12 @@ class Rating extends Component {
     this._stars = []
 
     for (let i = 0; i < this.max; i++) {
-      const starX = absX + i * (this.size + this.gap)
+      const starX = absX + i * (absSize + absGap)
       const filled = i < Math.floor(this.value)
       const partial = !filled && i < this.value
 
       // 创建星星路径
-      const star = this._createStar(paper, starX, absY, this.size, filled, partial)
+      const star = this._createStar(paper, starX, absY, absSize, filled, partial)
       this._stars.push(star)
     }
   }

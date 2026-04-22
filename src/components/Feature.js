@@ -4,6 +4,7 @@
 const { Component } = require('../core/Component')
 const { RectElement } = require('../elements/RectElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Feature extends Component {
   constructor(config = {}) {
@@ -34,50 +35,84 @@ class Feature extends Component {
     this._textElements = []
     this._bgElement = null
 
-    const height = this.height || 120
-    const contentWidth = this.width - this.padding * 2
-    let currentY = this.padding
-
-    // 背景
+    // 背景 - 使用临时尺寸
     if (this.backgroundColor) {
       this._bgElement = new RectElement({
         x: 0,
         y: 0,
-        width: this.width,
-        height: height,
+        width: 1,
+        height: 1,
         fillColor: this.backgroundColor,
         borderColor: this.borderColor,
-        borderWidth: 1,
-        borderRadius: this.radius,
+        borderWidth: 0,
+        borderRadius: 0,
         opacity: this.opacity,
       })
       this._bgElement.initialize(paper)
     }
+  }
+
+  render(paper, context = {}) {
+    if (!this.visible) return
+
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absPadding = toPixels(this.padding, context2d, 'width')
+    const absIconSize = toFontSizePixels(this.iconSize, context2d)
+    const absTitleSize = toFontSizePixels(this.titleSize, context2d)
+    const absDescSize = toFontSizePixels(this.descSize, context2d)
+    const absRadius = toPixels(this.radius, context2d, 'width')
+
+    // 背景
+    if (this._bgElement && this._bgElement._paperItem) {
+      this._bgElement.width = absWidth
+      this._bgElement.height = absHeight
+      this._bgElement.borderRadius = absRadius
+      this._bgElement.x = absX + absWidth / 2
+      this._bgElement.y = absY + absHeight / 2
+      this._bgElement.anchor = [0.5, 0.5]
+      this._bgElement.render(paper, context)
+    }
+
+    // 销毁旧的文本元素
+    for (const item of this._textElements) {
+      if (item.el) item.el.destroy()
+    }
+    this._textElements = []
+
+    const contentWidth = absWidth - absPadding * 2
+    let currentY = absY + absPadding
 
     // 图标
     if (this.icon) {
       const iconEl = new TextElement({
-        x: this.padding,
+        x: absX + absPadding,
         y: currentY,
         text: this.icon,
-        fontSize: this.iconSize,
+        fontSize: absIconSize,
         fontFamily: this.fontFamily,
         color: this.iconColor,
         textAlign: 'left',
         opacity: this.opacity,
       })
       iconEl.initialize(paper)
-      this._textElements.push({ el: iconEl, type: 'icon', startY: currentY })
-      currentY += this.iconSize + 4
+      iconEl.render(paper, context)
+      this._textElements.push({ el: iconEl, type: 'icon' })
+      currentY += absIconSize + 4
     }
 
     // 标题 - 智能换行
     if (this.title) {
       const titleEl = new TextElement({
-        x: this.padding,
+        x: absX + absPadding,
         y: currentY,
         text: this.title,
-        fontSize: this.titleSize,
+        fontSize: absTitleSize,
         fontFamily: this.fontFamily,
         color: this.titleColor,
         textAlign: 'left',
@@ -85,17 +120,18 @@ class Feature extends Component {
         opacity: this.opacity,
       })
       titleEl.initialize(paper)
-      this._textElements.push({ el: titleEl, type: 'title', startY: currentY })
-      currentY += this.titleSize + 4
+      titleEl.render(paper, context)
+      this._textElements.push({ el: titleEl, type: 'title' })
+      currentY += absTitleSize + 4
     }
 
     // 描述 - 智能换行
     if (this.description) {
       const descEl = new TextElement({
-        x: this.padding,
+        x: absX + absPadding,
         y: currentY,
         text: this.description,
-        fontSize: this.descSize,
+        fontSize: absDescSize,
         fontFamily: this.fontFamily,
         color: this.descColor,
         textAlign: 'left',
@@ -103,47 +139,8 @@ class Feature extends Component {
         opacity: this.opacity,
       })
       descEl.initialize(paper)
-      this._textElements.push({ el: descEl, type: 'desc', startY: currentY })
-    }
-  }
-
-  render(paper, context = {}) {
-    if (!this.visible) return
-
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
-
-    const height = this.height || 120
-    const contentWidth = this.width - this.padding * 2
-
-    // 背景
-    if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(
-        absX + this.width / 2,
-        absY + height / 2
-      )
-    }
-
-    // 文本元素 - 动态Y位置
-    let currentY = absY + this.padding
-    for (const item of this._textElements) {
-      const el = item.el
-      if (el && el._paperItem) {
-        el.x = absX + this.padding
-        el.y = currentY
-        el.render(paper, context)
-
-        // 计算渲染后的实际高度
-        if (item.type === 'icon') {
-          currentY += this.iconSize + 4
-        } else if (item.type === 'title') {
-          const titleHeight = el._measureText().height || this.titleSize
-          currentY += titleHeight + 4
-        } else if (item.type === 'desc') {
-          const descHeight = el._measureText().height || this.descSize
-          currentY += descHeight
-        }
-      }
+      descEl.render(paper, context)
+      this._textElements.push({ el: descEl, type: 'desc' })
     }
   }
 

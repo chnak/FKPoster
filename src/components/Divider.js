@@ -2,6 +2,7 @@
  * 分隔线组件
  */
 const { Component } = require('../core/Component')
+const { toPixels } = require('../utils/unit-converter')
 
 class Divider extends Component {
   constructor(config = {}) {
@@ -24,8 +25,13 @@ class Divider extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absThickness = toPixels(this.thickness, context2d, 'height')
 
     // 移除旧的线段
     if (this._paperItem) {
@@ -35,9 +41,9 @@ class Divider extends Component {
     // 创建新线段
     const line = new paper.Path.Line({
       from: [absX, absY],
-      to: [absX + this.width, absY],
+      to: [absX + absWidth, absY],
       strokeColor: new paper.Color(this.color),
-      strokeWidth: this.thickness,
+      strokeWidth: absThickness,
     })
 
     if (this.style === 'dashed') {

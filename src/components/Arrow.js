@@ -2,6 +2,7 @@
  * 箭头组件
  */
 const { Component } = require('../core/Component')
+const { toPixels } = require('../utils/unit-converter')
 
 class Arrow extends Component {
   constructor(config = {}) {
@@ -29,16 +30,22 @@ class Arrow extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
     }
     this._pathElements = []
 
-    const x1 = this._resolvePercent(this.x1, context.width)
-    const y1 = this._resolvePercent(this.y1, context.height)
-    const x2 = this._resolvePercent(this.x2, context.width)
-    const y2 = this._resolvePercent(this.y2, context.height)
+    const x1 = toPixels(this.x1, context2d, 'x')
+    const y1 = toPixels(this.y1, context2d, 'y')
+    const x2 = toPixels(this.x2, context2d, 'x')
+    const y2 = toPixels(this.y2, context2d, 'y')
+
+    // 转换单位
+    const absStrokeWidth = toPixels(this.strokeWidth, context2d, 'width')
+    const absHeadSize = toPixels(this.headSize, context2d, 'width')
 
     if (!paper.project || !paper.project.activeLayer) return
 
@@ -48,7 +55,7 @@ class Arrow extends Component {
       to: [x2, y2]
     })
     line.strokeColor = new paper.Color(this.color)
-    line.strokeWidth = this.strokeWidth
+    line.strokeWidth = absStrokeWidth
     if (this.style === 'dashed') {
       line.dashArray = [10, 5]
     }
@@ -63,17 +70,17 @@ class Arrow extends Component {
 
       path.moveTo(endX, endY)
       path.lineTo(
-        endX + this.headSize * Math.cos(angle1),
-        endY + this.headSize * Math.sin(angle1)
+        endX + absHeadSize * Math.cos(angle1),
+        endY + absHeadSize * Math.sin(angle1)
       )
       path.moveTo(endX, endY)
       path.lineTo(
-        endX + this.headSize * Math.cos(angle2),
-        endY + this.headSize * Math.sin(angle2)
+        endX + absHeadSize * Math.cos(angle2),
+        endY + absHeadSize * Math.sin(angle2)
       )
 
       path.strokeColor = new paper.Color(this.color)
-      path.strokeWidth = this.strokeWidth
+      path.strokeWidth = absStrokeWidth
       path.strokeCap = 'round'
       return path
     }

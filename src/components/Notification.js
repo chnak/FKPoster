@@ -4,6 +4,7 @@
 const { Component } = require('../core/Component')
 const { RectElement } = require('../elements/RectElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Notification extends Component {
   constructor(config = {}) {
@@ -34,49 +35,39 @@ class Notification extends Component {
   initialize(paper) {
     this._paper = paper
 
-    const padding = 16
-    const lineHeight = 22
-    const iconSize = 24
-    const height = padding * 2 + (this.title ? lineHeight + 8 : 0) + (this.message ? lineHeight : 0)
-    this._actualHeight = height
-
-    // 背景
+    // 背景 - 使用临时尺寸
     this._bgElement = new RectElement({
       x: 0,
       y: 0,
-      width: this.width,
-      height: height,
+      width: 1,
+      height: 1,
       fillColor: this._config.bgColor,
       borderColor: this._config.borderColor,
-      borderWidth: 1,
-      borderRadius: this.radius,
+      borderWidth: 0,
+      borderRadius: 0,
       opacity: this.opacity,
     })
     this._bgElement.initialize(paper)
 
     // 图标
-    if (this.showIcon) {
-      this._iconElement = new TextElement({
-        x: padding + iconSize / 2,
-        y: padding + iconSize / 2 + 6,
-        text: this._config.icon,
-        fontSize: iconSize,
-        fontFamily: this.fontFamily,
-        color: this._config.iconColor,
-        textAlign: 'center',
-        opacity: this.opacity,
-      })
-      this._iconElement.initialize(paper)
-    }
-
-    const textX = this.showIcon ? padding + iconSize + 12 : padding
-    let currentY = padding
+    this._iconElement = new TextElement({
+      x: 0,
+      y: 0,
+      text: this._config.icon,
+      fontSize: 24,
+      fontFamily: this.fontFamily,
+      color: this._config.iconColor,
+      textAlign: 'center',
+      opacity: this.opacity,
+    })
+    this._iconElement.initialize(paper)
 
     // 标题
+    this._titleElement = null
     if (this.title) {
       this._titleElement = new TextElement({
-        x: textX,
-        y: currentY + 18,
+        x: 0,
+        y: 0,
         text: this.title,
         fontSize: 16,
         fontFamily: this.fontFamily,
@@ -85,14 +76,14 @@ class Notification extends Component {
         opacity: this.opacity,
       })
       this._titleElement.initialize(paper)
-      currentY += lineHeight + 8
     }
 
     // 消息
+    this._msgElement = null
     if (this.message) {
       this._msgElement = new TextElement({
-        x: textX,
-        y: currentY + 16,
+        x: 0,
+        y: 0,
         text: this.message,
         fontSize: 14,
         fontFamily: this.fontFamily,
@@ -107,43 +98,60 @@ class Notification extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
 
-    // 背景
-    if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(
-        absX + this.width / 2,
-        absY + this._actualHeight / 2
-      )
-    }
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absRadius = toPixels(this.radius, context2d, 'width')
 
     const padding = 16
     const lineHeight = 22
     const iconSize = 24
+    const gap = 6
+    const topPadding = 10
+    const bottomPadding = 22
+
+    // 统一用 lineHeight 作为一行的高度
+    const contentHeight = lineHeight + (this.title ? gap + lineHeight : 0) + (this.message ? gap + lineHeight : 0)
+    // 顶部间距小，底部间距大，让内容偏下
+    const actualHeight = topPadding + contentHeight + bottomPadding
+
+    // 背景
+    if (this._bgElement && this._bgElement._paperItem) {
+      this._bgElement.width = absWidth
+      this._bgElement.height = actualHeight
+      this._bgElement.borderRadius = absRadius
+      this._bgElement.x = absX + absWidth / 2
+      this._bgElement.y = absY + actualHeight / 2
+      this._bgElement.anchor = [0.5, 0.5]
+      this._bgElement.render(paper, context)
+    }
+
     const textX = this.showIcon ? padding + iconSize + 12 : padding
 
-    // 图标
+    // 图标 - 垂直居中于第一行
     if (this.showIcon && this._iconElement && this._iconElement._paperItem) {
-      this._iconElement.x = absX + padding + iconSize / 2
-      this._iconElement.y = absY + padding + iconSize / 2 + 6
+      this._iconElement.x = absX + padding
+      this._iconElement.y = absY + topPadding + lineHeight
       this._iconElement.render(paper, context)
     }
 
-    let currentY = absY + padding
+    let currentY = absY + topPadding
 
-    // 标题
+    // 标题 - 垂直居中于第一行
     if (this._titleElement && this._titleElement._paperItem) {
       this._titleElement.x = absX + textX
-      this._titleElement.y = currentY + 18
+      this._titleElement.y = currentY + lineHeight
       this._titleElement.render(paper, context)
-      currentY += lineHeight + 8
+      currentY += lineHeight + gap
     }
 
-    // 消息
+    // 消息 - 垂直居中于第二行
     if (this._msgElement && this._msgElement._paperItem) {
       this._msgElement.x = absX + textX
-      this._msgElement.y = currentY + 16
+      this._msgElement.y = currentY + lineHeight
       this._msgElement.render(paper, context)
     }
   }

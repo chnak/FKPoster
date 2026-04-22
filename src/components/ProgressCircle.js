@@ -3,6 +3,7 @@
  */
 const { Component } = require('../core/Component')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels } = require('../utils/unit-converter')
 
 class ProgressCircle extends Component {
   constructor(config = {}) {
@@ -28,12 +29,11 @@ class ProgressCircle extends Component {
     this._pathElements = []
 
     if (this.showLabel) {
-      const fontSize = Math.min(Math.max(Math.round(this.radius * 0.35), 12), 48)
       this._labelElement = new TextElement({
         x: 0,
-        y: fontSize * 0.35,
+        y: 0,
         text: `${Math.round(this.value)}%`,
-        fontSize: fontSize,
+        fontSize: 12,
         fontFamily: this.fontFamily,
         color: this.labelColor,
         textAlign: 'center',
@@ -48,8 +48,13 @@ class ProgressCircle extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absRadius = toPixels(this.radius, context2d, 'width')
+    const absStrokeWidth = toPixels(this.strokeWidth, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -60,8 +65,8 @@ class ProgressCircle extends Component {
     // 背景圆（填充整个区域）
     if (this.backgroundColor) {
       const bgCircle = new paper.Path.Circle({
-        center: [absX + this.radius, absY + this.radius],
-        radius: this.radius + this.strokeWidth / 2,
+        center: [absX + absRadius, absY + absRadius],
+        radius: absRadius + absStrokeWidth / 2,
       })
       bgCircle.fillColor = new paper.Color(this.backgroundColor)
       if (paper.project && paper.project.activeLayer) {
@@ -72,12 +77,12 @@ class ProgressCircle extends Component {
 
     // 轨道（空心圆）
     const trackCircle = new paper.Path.Circle({
-      center: [absX + this.radius, absY + this.radius],
-      radius: this.radius,
+      center: [absX + absRadius, absY + absRadius],
+      radius: absRadius,
     })
     trackCircle.fillColor = null
     trackCircle.strokeColor = new paper.Color(this.trackColor)
-    trackCircle.strokeWidth = this.strokeWidth
+    trackCircle.strokeWidth = absStrokeWidth
     if (paper.project && paper.project.activeLayer) {
       paper.project.activeLayer.addChild(trackCircle)
     }
@@ -94,8 +99,8 @@ class ProgressCircle extends Component {
 
       // 起点
       progressArc.moveTo(
-        absX + this.radius + this.radius * Math.cos(startRad),
-        absY + this.radius + this.radius * Math.sin(startRad)
+        absX + absRadius + absRadius * Math.cos(startRad),
+        absY + absRadius + absRadius * Math.sin(startRad)
       )
 
       // 弧线上的点
@@ -104,13 +109,13 @@ class ProgressCircle extends Component {
       for (let i = 1; i <= segments; i++) {
         const angle = startRad + angleStep * i
         progressArc.lineTo(
-          absX + this.radius + this.radius * Math.cos(angle),
-          absY + this.radius + this.radius * Math.sin(angle)
+          absX + absRadius + absRadius * Math.cos(angle),
+          absY + absRadius + absRadius * Math.sin(angle)
         )
       }
 
       progressArc.strokeColor = new paper.Color(this.fillColor)
-      progressArc.strokeWidth = this.strokeWidth
+      progressArc.strokeWidth = absStrokeWidth
       progressArc.strokeCap = 'round'
 
       if (paper.project && paper.project.activeLayer) {
@@ -121,9 +126,12 @@ class ProgressCircle extends Component {
 
     // 标签
     if (this._labelElement && this._labelElement._paperItem) {
-      this._labelElement.x = absX + this.radius
-      this._labelElement.y = absY + this.radius
+      const fontSize = Math.min(Math.max(Math.round(absRadius * 0.35), 12), 48)
+      this._labelElement.x = absX + absRadius
+      this._labelElement.y = absY + absRadius
+      this._labelElement.fontSize = fontSize
       this._labelElement.render(paper, context)
+      this._labelElement._paperItem.bringToFront()
     }
   }
 

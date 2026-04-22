@@ -2,6 +2,7 @@
  * 印章组件 - 印章效果
  */
 const { Component } = require('../core/Component')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Seal extends Component {
   constructor(config = {}) {
@@ -24,7 +25,7 @@ class Seal extends Component {
     this._pathElements = []
   }
 
-  _createStarPath(cx, cy, outerR, innerR, points) {
+  _createStarPath(paper, cx, cy, outerR, innerR, points) {
     const path = new paper.Path()
     const angleStep = Math.PI / points
 
@@ -37,7 +38,7 @@ class Seal extends Component {
     return path
   }
 
-  _createPolygonPath(cx, cy, radius, sides) {
+  _createPolygonPath(paper, cx, cy, radius, sides) {
     const path = new paper.Path()
     for (let i = 0; i < sides; i++) {
       const angle = (i * 2 * Math.PI / sides) - Math.PI / 2
@@ -50,8 +51,14 @@ class Seal extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absSize = toPixels(this.size, context2d, 'width')
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
+    const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -61,8 +68,8 @@ class Seal extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
-    const centerX = absX + this.size / 2
-    const centerY = absY + this.size / 2
+    const centerX = absX + absSize / 2
+    const centerY = absY + absSize / 2
 
     // 印章边框
     let border
@@ -70,32 +77,32 @@ class Seal extends Component {
       case 'circle':
         border = new paper.Path.Circle({
           center: [centerX, centerY],
-          radius: this.size / 2 - this.borderWidth,
+          radius: absSize / 2 - absBorderWidth,
         })
         break
       case 'square':
-        const squareSize = this.size - this.borderWidth * 2
+        const squareSize = absSize - absBorderWidth * 2
         border = new paper.Path.Rectangle({
-          point: [absX + this.borderWidth, absY + this.borderWidth],
+          point: [absX + absBorderWidth, absY + absBorderWidth],
           size: [squareSize, squareSize],
           radius: 4,
         })
         break
       case 'star':
-        border = this._createStarPath(centerX, centerY, this.size / 2 - this.borderWidth, this.size / 2 - this.borderWidth - 10, 5)
+        border = this._createStarPath(paper, centerX, centerY, absSize / 2 - absBorderWidth, absSize / 2 - absBorderWidth - 10, 5)
         break
       case 'hexagon':
-        border = this._createPolygonPath(centerX, centerY, this.size / 2 - this.borderWidth, 6)
+        border = this._createPolygonPath(paper, centerX, centerY, absSize / 2 - absBorderWidth, 6)
         break
       default:
         border = new paper.Path.Circle({
           center: [centerX, centerY],
-          radius: this.size / 2 - this.borderWidth,
+          radius: absSize / 2 - absBorderWidth,
         })
     }
 
     border.strokeColor = new paper.Color(this.color)
-    border.strokeWidth = this.borderWidth
+    border.strokeWidth = absBorderWidth
     border.fillColor = null
     paper.project.activeLayer.addChild(border)
     this._pathElements.push(border)
@@ -109,9 +116,9 @@ class Seal extends Component {
 
     // 主文字
     const textItem = new paper.PointText({
-      point: [centerX, centerY + this.fontSize / 3],
+      point: [centerX, centerY + absFontSize / 3],
       content: this.text,
-      fontSize: this.fontSize,
+      fontSize: absFontSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
       fillColor: new paper.Color(this.color),
       justification: 'center',
@@ -121,7 +128,7 @@ class Seal extends Component {
 
     // 顶部星星
     const topText = new paper.PointText({
-      point: [centerX, centerY - this.size / 4],
+      point: [centerX, centerY - absSize / 4],
       content: '★',
       fontSize: 16,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
@@ -133,7 +140,7 @@ class Seal extends Component {
 
     // 底部星星装饰
     const bottomStar = new paper.PointText({
-      point: [centerX, centerY + this.size / 3],
+      point: [centerX, centerY + absSize / 3],
       content: '★ ★ ★',
       fontSize: 12,
       fontFamily: this.fontFamily || 'Microsoft YaHei',

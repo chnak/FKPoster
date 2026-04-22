@@ -4,6 +4,7 @@
 const { Component } = require('../core/Component')
 const { RectElement } = require('../elements/RectElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels } = require('../utils/unit-converter')
 
 class Progress extends Component {
   constructor(config = {}) {
@@ -24,27 +25,26 @@ class Progress extends Component {
   }
 
   initialize(paper) {
-    // 轨道背景
+    // 轨道背景 - 使用临时尺寸，会在 render 时更新
     this._trackElement = new RectElement({
       x: 0,
       y: 0,
-      width: this.width,
-      height: this.height,
+      width: 1,
+      height: 1,
       fillColor: this.trackColor,
-      borderRadius: this.radius,
+      borderRadius: 0,
       opacity: this.opacity,
     })
     this._trackElement.initialize(paper)
 
-    // 进度填充
-    const progressWidth = (this.value / 100) * this.width
+    // 进度填充 - 使用临时尺寸
     this._fillElement = new RectElement({
       x: 0,
       y: 0,
-      width: progressWidth,
-      height: this.height,
+      width: 1,
+      height: 1,
       fillColor: this.fillColor,
-      borderRadius: this.radius,
+      borderRadius: 0,
       opacity: this.opacity,
     })
     this._fillElement.initialize(paper)
@@ -52,8 +52,8 @@ class Progress extends Component {
     // 标签
     if (this.showLabel && this.label) {
       this._labelElement = new TextElement({
-        x: this.width / 2,
-        y: -10,
+        x: 0,
+        y: 0,
         text: this.label,
         fontSize: 14,
         fontFamily: this.fontFamily,
@@ -68,31 +68,42 @@ class Progress extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absRadius = toPixels(this.radius, context2d, 'width')
 
     // 轨道
     if (this._trackElement && this._trackElement._paperItem) {
-      this._trackElement._paperItem.position = new paper.Point(
-        absX + this.width / 2,
-        absY + this.height / 2
-      )
+      this._trackElement.width = absWidth
+      this._trackElement.height = absHeight
+      this._trackElement.borderRadius = absRadius
+      this._trackElement.x = absX + absWidth / 2
+      this._trackElement.y = absY + absHeight / 2
+      this._trackElement.anchor = [0.5, 0.5]
+      this._trackElement.render(paper, context)
     }
 
-    // 进度
+    // 进度 (value 是百分比 0-100)
     if (this._fillElement && this._fillElement._paperItem) {
-      const progressWidth = (this.value / 100) * this.width
+      const progressWidth = (this.value / 100) * absWidth
+      const fillX = absX + progressWidth / 2
       this._fillElement.width = progressWidth
-      this._fillElement._paperItem.bounds.width = progressWidth
-      this._fillElement._paperItem.position = new paper.Point(
-        absX + progressWidth / 2,
-        absY + this.height / 2
-      )
+      this._fillElement.height = absHeight
+      this._fillElement.borderRadius = absRadius
+      this._fillElement.x = fillX
+      this._fillElement.y = absY + absHeight / 2
+      this._fillElement.anchor = [0.5, 0.5]
+      this._fillElement.render(paper, context)
     }
 
     // 标签
     if (this._labelElement && this._labelElement._paperItem) {
-      this._labelElement.x = absX + this.width / 2
+      this._labelElement.x = absX + absWidth / 2
       this._labelElement.y = absY - 10
       this._labelElement.render(paper, context)
     }

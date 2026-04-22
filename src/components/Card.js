@@ -5,6 +5,7 @@
 const { Component } = require('../core/Component')
 const { RectElement } = require('../elements/RectElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Card extends Component {
   constructor(config = {}) {
@@ -80,24 +81,61 @@ class Card extends Component {
   initialize(paper) {
     this._paper = paper
 
+    // 背景 - 使用临时尺寸
+    this._bgElement = new RectElement({
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      fillColor: this.backgroundColor,
+      borderColor: this.borderColor,
+      borderWidth: 0,
+      borderRadius: 0,
+      opacity: this.opacity,
+    })
+    this._bgElement.initialize(paper)
+
+    // 标题和副标题元素会在 render 时创建/更新
+    this._titleElements = []
+    this._subtitleElements = []
+    this._titleLines = []
+    this._subtitleLines = []
+  }
+
+  render(paper, context = {}) {
+    if (!this.visible) return
+
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absPadding = toPixels(this._padding, context2d, 'width')
+    const absTitleSize = toFontSizePixels(this.titleSize, context2d)
+    const absSubtitleSize = toFontSizePixels(this.subtitleSize, context2d)
+    const absRadius = toPixels(this.radius, context2d, 'width')
+    const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+
     // 计算可用宽度
-    const maxTextWidth = this.width - this._padding * 2
+    const maxTextWidth = absWidth - absPadding * 2
 
     // 标题换行
     let titleLines = []
     if (this.title) {
-      titleLines = this._wrapText(paper, this.title, maxTextWidth, this.titleSize, this.fontFamily)
+      titleLines = this._wrapText(paper, this.title, maxTextWidth, absTitleSize, this.fontFamily)
     }
 
     // 副标题换行
     let subtitleLines = []
     if (this.subtitle) {
-      subtitleLines = this._wrapText(paper, this.subtitle, maxTextWidth, this.subtitleSize, this.fontFamily)
+      subtitleLines = this._wrapText(paper, this.subtitle, maxTextWidth, absSubtitleSize, this.fontFamily)
     }
 
     // 计算行高
-    const titleLineHeight = this.titleSize * 1.3
-    const subtitleLineHeight = this.subtitleSize * 1.3
+    const titleLineHeight = absTitleSize * 1.3
+    const subtitleLineHeight = absSubtitleSize * 1.3
 
     // 计算内容高度
     const titleHeight = titleLines.length * titleLineHeight
@@ -105,97 +143,66 @@ class Card extends Component {
     const contentHeight = titleHeight + (this.title && this.subtitle ? 8 : 0) + subtitleHeight
 
     // 计算最小高度（如果内容不足，用内容高度填充）
-    const minHeight = this._padding * 2 + Math.max(contentHeight, this.height - this._padding * 2)
-    this._actualHeight = Math.max(this.height, minHeight)
+    const minHeight = absPadding * 2 + Math.max(contentHeight, absHeight - absPadding * 2)
+    const actualHeight = Math.max(absHeight, minHeight)
 
-    // 背景
-    this._bgElement = new RectElement({
-      x: 0,
-      y: 0,
-      width: this.width,
-      height: this._actualHeight,
-      fillColor: this.backgroundColor,
-      borderColor: this.borderColor,
-      borderWidth: this.borderWidth,
-      borderRadius: this.radius,
-      opacity: this.opacity,
-    })
-    this._bgElement.initialize(paper)
+    // 更新背景
+    if (this._bgElement && this._bgElement._paperItem) {
+      this._bgElement.width = absWidth
+      this._bgElement.height = actualHeight
+      this._bgElement.borderWidth = absBorderWidth
+      this._bgElement.borderRadius = absRadius
+      this._bgElement.x = absX
+      this._bgElement.y = absY
+      this._bgElement.render(paper, context)
+    }
 
-    // 存储换行后的文本行
-    this._titleLines = titleLines
-    this._subtitleLines = subtitleLines
+    // 销毁旧的标题元素
+    for (const el of this._titleElements) {
+      if (el) el.destroy()
+    }
+    this._titleElements = []
 
     // 标题文本元素
-    this._titleElements = []
     for (let i = 0; i < titleLines.length; i++) {
       const el = new TextElement({
-        x: this._padding,
-        y: this._padding + this.titleSize + i * titleLineHeight,
+        x: absX + absPadding,
+        y: absY + absPadding + absTitleSize + i * titleLineHeight,
         text: titleLines[i],
-        fontSize: this.titleSize,
+        fontSize: absTitleSize,
         fontFamily: this.fontFamily,
         color: this.titleColor,
         textAlign: 'left',
         opacity: this.opacity,
       })
       el.initialize(paper)
+      el.render(paper, context)
       this._titleElements.push(el)
     }
 
-    // 副标题文本元素
+    // 销毁旧的副标题元素
+    for (const el of this._subtitleElements) {
+      if (el) el.destroy()
+    }
     this._subtitleElements = []
-    const subtitleStartY = this._padding + titleHeight + (this.title && this.subtitle ? 8 : 0)
+
+    // 副标题文本元素
+    const subtitleStartY = absPadding + titleHeight + (this.title && this.subtitle ? 8 : 0)
 
     for (let i = 0; i < subtitleLines.length; i++) {
       const el = new TextElement({
-        x: this._padding,
-        y: subtitleStartY + this.subtitleSize + i * subtitleLineHeight,
+        x: absX + absPadding,
+        y: absY + subtitleStartY + absSubtitleSize + i * subtitleLineHeight,
         text: subtitleLines[i],
-        fontSize: this.subtitleSize,
+        fontSize: absSubtitleSize,
         fontFamily: this.fontFamily,
         color: this.subtitleColor,
         textAlign: 'left',
         opacity: this.opacity,
       })
       el.initialize(paper)
+      el.render(paper, context)
       this._subtitleElements.push(el)
-    }
-  }
-
-  render(paper, context = {}) {
-    if (!this.visible) return
-
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
-
-    // 背景
-    if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.bounds.x = absX
-      this._bgElement._paperItem.bounds.y = absY
-    }
-
-    // 标题
-    for (let i = 0; i < this._titleElements.length; i++) {
-      const el = this._titleElements[i]
-      if (el && el._paperItem) {
-        el.x = absX + this._padding
-        el.y = absY + this._padding + this.titleSize + i * this.titleSize * 1.3
-        el.render(paper, context)
-      }
-    }
-
-    // 副标题
-    const titleHeight = this._titleLines.length * this.titleSize * 1.3
-    const subtitleStartY = this._padding + titleHeight + (this.title && this.subtitle ? 8 : 0)
-
-    for (let i = 0; i < this._subtitleElements.length; i++) {
-      const el = this._subtitleElements[i]
-      if (el && el._paperItem) {
-        el.x = absX + this._padding
-        el.y = absY + subtitleStartY + this.subtitleSize + i * this.subtitleSize * 1.3
-        el.render(paper, context)
-      }
     }
   }
 

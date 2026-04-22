@@ -4,6 +4,7 @@
 const { Component } = require('../core/Component')
 const { RectElement } = require('../elements/RectElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Chip extends Component {
   constructor(config = {}) {
@@ -25,30 +26,17 @@ class Chip extends Component {
     this.fontFamily = config.fontFamily
   }
 
-  _calcSize() {
-    const textStr = String(this.text || '')
-    const chineseChars = (textStr.match(/[\u4e00-\u9fa5]/g) || []).length
-    const otherChars = textStr.length - chineseChars
-    const textWidth = chineseChars * this.fontSize * 1.0 + otherChars * this.fontSize * 0.5
-    const iconWidth = this.icon ? this.fontSize : 0
-
-    this._chipWidth = this.padding * 2 + textWidth + iconWidth + 4
-    this._chipHeight = this.fontSize + this.padding * 2
-  }
-
   initialize(paper) {
-    this._calcSize()
-
     // 背景
     this._bgElement = new RectElement({
       x: 0,
       y: 0,
-      width: this._chipWidth,
-      height: this._chipHeight,
+      width: 1,
+      height: 1,
       fillColor: this.backgroundColor,
       borderColor: this.borderColor,
       borderWidth: 1,
-      borderRadius: this.radius,
+      borderRadius: 0,
       opacity: this.opacity,
     })
     this._bgElement.initialize(paper)
@@ -56,10 +44,10 @@ class Chip extends Component {
     // 图标
     if (this.icon) {
       this._iconElement = new TextElement({
-        x: this.padding + this.fontSize / 2,
-        y: this._chipHeight / 2,
+        x: 0,
+        y: 0,
         text: this.icon,
-        fontSize: this.fontSize + 2,
+        fontSize: 12,
         color: this.color,
         textAlign: 'center',
         anchor: [0.5, 0.5],
@@ -69,15 +57,11 @@ class Chip extends Component {
     }
 
     // 文字
-    const textX = this.icon
-      ? this.padding + this.fontSize + 4 + this._chipWidth / 2
-      : this._chipWidth / 2
-
     this._textElement = new TextElement({
-      x: textX,
-      y: this._chipHeight / 2,
+      x: 0,
+      y: 0,
       text: this.text,
-      fontSize: this.fontSize,
+      fontSize: 12,
       fontFamily: this.fontFamily,
       color: this.color,
       textAlign: 'center',
@@ -90,32 +74,54 @@ class Chip extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
+    const absPadding = toPixels(this.padding, context2d, 'width')
+    const absRadius = toPixels(this.radius, context2d, 'width')
+
+    // 计算尺寸
+    const textStr = String(this.text || '')
+    const chineseChars = (textStr.match(/[\u4e00-\u9fa5]/g) || []).length
+    const otherChars = textStr.length - chineseChars
+    const textWidth = chineseChars * absFontSize * 1.0 + otherChars * absFontSize * 0.5
+    const iconWidth = this.icon ? absFontSize : 0
+
+    const chipWidth = absPadding * 2 + textWidth + iconWidth + 4
+    const chipHeight = absFontSize + absPadding * 2
 
     // 背景
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(
-        absX + this._chipWidth / 2,
-        absY + this._chipHeight / 2
-      )
+      this._bgElement.width = chipWidth
+      this._bgElement.height = chipHeight
+      this._bgElement.borderRadius = absRadius
+      this._bgElement.x = absX + chipWidth / 2
+      this._bgElement.y = absY + chipHeight / 2
+      this._bgElement.anchor = [0.5, 0.5]
+      this._bgElement.render(paper, context)
     }
 
     // 图标
     if (this._iconElement && this._iconElement._paperItem) {
-      this._iconElement.x = absX + this.padding + this.fontSize / 2
-      this._iconElement.y = absY + this._chipHeight / 2
+      this._iconElement.x = absX + absPadding + absFontSize / 2
+      this._iconElement.y = absY + chipHeight / 2
+      this._iconElement.fontSize = absFontSize + 2
       this._iconElement.render(paper, context)
     }
 
     // 文字
     if (this._textElement && this._textElement._paperItem) {
       const textX = this.icon
-        ? absX + this.padding + this.fontSize + 4 + this._chipWidth / 2
-        : absX + this._chipWidth / 2
+        ? absX + absPadding + absFontSize + 4 + chipWidth / 2
+        : absX + chipWidth / 2
       this._textElement.x = textX
-      this._textElement.y = absY + this._chipHeight / 2
+      this._textElement.y = absY + chipHeight / 2
+      this._textElement.fontSize = absFontSize
       this._textElement.render(paper, context)
+      this._textElement._paperItem.bringToFront()
     }
   }
 

@@ -4,6 +4,7 @@
 const { Component } = require('../core/Component')
 const { RectElement } = require('../elements/RectElement')
 const { TextElement } = require('../elements/TextElement')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Badge extends Component {
   constructor(config = {}) {
@@ -24,43 +25,28 @@ class Badge extends Component {
     this.fontFamily = config.fontFamily
   }
 
-  _calcSize() {
-    const textStr = String(this.text || '')
-    const chineseChars = (textStr.match(/[\u4e00-\u9fa5]/g) || []).length
-    const otherChars = textStr.length - chineseChars
-    const textWidth = chineseChars * this.fontSize * 1.0 + otherChars * this.fontSize * 0.5
-
-    this._badgeWidth = textWidth + this.padding * 2
-    this._badgeHeight = this.fontSize + this.padding * 2
-
-    // 设置实际的 width 和 height 属性
-    this.width = this._badgeWidth
-    this.height = this._badgeHeight
-  }
-
   initialize(paper) {
     if (this._initialized) return
     this._initialized = true
-    this._calcSize()
 
-    // 背景
+    // 创建占位的背景（会在 render 时设置实际尺寸）
     this._bgElement = new RectElement({
       x: 0,
       y: 0,
-      width: this._badgeWidth,
-      height: this._badgeHeight,
+      width: 1,
+      height: 1,
       fillColor: this.backgroundColor,
       borderColor: this.borderColor,
       borderWidth: 1,
-      borderRadius: this.radius,
+      borderRadius: 0,
       opacity: this.opacity,
     })
     this._bgElement.initialize(paper)
 
-    // 文字 - 居中定位
+    // 文字 - 居中定位（临时值，会在 render 时更新）
     this._textElement = new TextElement({
-      x: this._badgeWidth / 2,
-      y: this._badgeHeight / 2,
+      x: 0,
+      y: 0,
       text: this.text,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
@@ -75,22 +61,42 @@ class Badge extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
+    const absPadding = toPixels(this.padding, context2d, 'width')
+    const absRadius = toPixels(this.radius, context2d, 'width')
+
+    // 计算尺寸
+    const textStr = String(this.text || '')
+    const chineseChars = (textStr.match(/[\u4e00-\u9fa5]/g) || []).length
+    const otherChars = textStr.length - chineseChars
+    const textWidth = chineseChars * absFontSize * 1.0 + otherChars * absFontSize * 0.5
+
+    const badgeWidth = textWidth + absPadding * 2
+    const badgeHeight = absFontSize + absPadding * 2
 
     // 背景位置 - 居中定位
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(
-        absX + this._badgeWidth / 2,
-        absY + this._badgeHeight / 2
-      )
+      this._bgElement.width = badgeWidth
+      this._bgElement.height = badgeHeight
+      this._bgElement.borderRadius = absRadius
+      this._bgElement.x = absX + badgeWidth / 2
+      this._bgElement.y = absY + badgeHeight / 2
+      this._bgElement.anchor = [0.5, 0.5]
+      this._bgElement.render(paper, context)
     }
 
     // 文字位置 - 居中定位
     if (this._textElement && this._textElement._paperItem) {
-      this._textElement.x = absX + this._badgeWidth / 2
-      this._textElement.y = absY + this._badgeHeight / 2
+      this._textElement.x = absX + badgeWidth / 2
+      this._textElement.y = absY + badgeHeight / 2
+      this._textElement.fontSize = absFontSize
       this._textElement.render(paper, context)
+      this._textElement._paperItem.bringToFront()
     }
   }
 

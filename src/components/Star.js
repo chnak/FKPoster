@@ -3,6 +3,7 @@
  * 支持多角星形
  */
 const { Component } = require('../core/Component')
+const { toPixels } = require('../utils/unit-converter')
 
 class Star extends Component {
   constructor(config = {}) {
@@ -27,8 +28,11 @@ class Star extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+    const absOuterRadius = toPixels(this.outerRadius, context2d, 'width')
+    const absInnerRadius = toPixels(this.innerRadius, context2d, 'width')
 
     if (this._paperItem) {
       this._paperItem.remove()
@@ -39,10 +43,10 @@ class Star extends Component {
     const angleStep = Math.PI / this.points
 
     for (let i = 0; i < this.points * 2; i++) {
-      const radius = i % 2 === 0 ? this.outerRadius : this.innerRadius
+      const radius = i % 2 === 0 ? absOuterRadius : absInnerRadius
       const angle = i * angleStep - Math.PI / 2 + (this.rotation * Math.PI / 180)
-      const px = absX + radius * Math.cos(angle)
-      const py = absY + radius * Math.sin(angle)
+      const px = absX + absOuterRadius + radius * Math.cos(angle)
+      const py = absY + absOuterRadius + radius * Math.sin(angle)
 
       if (i === 0) {
         path.moveTo(px, py)
@@ -57,7 +61,7 @@ class Star extends Component {
     }
     if (this.strokeColor) {
       path.strokeColor = new paper.Color(this.strokeColor)
-      path.strokeWidth = this.strokeWidth
+      path.strokeWidth = toPixels(this.strokeWidth, context2d, 'width')
     }
     path.opacity = this.opacity
 

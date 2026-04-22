@@ -2,6 +2,7 @@
  * 分隔线元素
  */
 const { BaseElement } = require('../core/BaseElement')
+const { toPixels } = require('../utils/unit-converter')
 
 class DividerElement extends BaseElement {
   constructor(config = {}) {
@@ -15,12 +16,12 @@ class DividerElement extends BaseElement {
   }
 
   _createPaperItem(paper) {
-    // 直接使用 Line
+    // Use numeric placeholders since render() will calculate proper values
     const line = new paper.Path.Line({
       from: [0, 0],
-      to: [this.width, 0],
+      to: [100, 0],
       strokeColor: new paper.Color(this.color),
-      strokeWidth: this.thickness,
+      strokeWidth: typeof this.thickness === 'string' ? 1 : this.thickness,
     })
 
     if (this.style === 'dashed') {
@@ -35,18 +36,32 @@ class DividerElement extends BaseElement {
     if (!this._initialized) this.initialize(paper)
     if (!this._paperItem) return
 
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+
     // 计算位置
-    const x = this._resolvePercent(this.x, context.width)
-    const y = this._resolvePercent(this.y, context.height)
+    const x = toPixels(this.x, context2d, 'x')
+    const y = toPixels(this.y, context2d, 'y')
+    const width = toPixels(this.width, context2d, 'width')
+    const thickness = toPixels(this.thickness, context2d, 'width')
 
     // 支持 anchor 定位
     const anchorX = this.anchor ? this.anchor[0] : 0
     const anchorY = this.anchor ? this.anchor[1] : 0
-    const posX = x - this.width * anchorX
+    const posX = x - width * anchorX
     const posY = y - anchorY
 
-    this._paperItem.bounds.x = posX
-    this._paperItem.bounds.y = posY
+    // Update line position and size
+    this._paperItem.remove()
+    this._paperItem = new paper.Path.Line({
+      from: [posX, posY],
+      to: [posX + width, posY],
+      strokeColor: new paper.Color(this.color),
+      strokeWidth: thickness,
+    })
+
+    if (this.style === 'dashed') {
+      this._paperItem.dashArray = [10, 5]
+    }
 
     this._paperItem.opacity = this.opacity
     this._paperItem.visible = this.visible

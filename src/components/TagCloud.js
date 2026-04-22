@@ -2,6 +2,7 @@
  * 标签云组件
  */
 const { Component } = require('../core/Component')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class TagCloud extends Component {
   constructor(config = {}) {
@@ -26,8 +27,15 @@ class TagCloud extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
+    const absPadding = toPixels(this.padding, context2d, 'width')
+    const absGap = toPixels(this.gap, context2d, 'width')
+    const absMaxWidth = toPixels(this.maxWidth, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -45,14 +53,14 @@ class TagCloud extends Component {
       const tagText = String(tag.text || '')
       if (!tagText) continue
 
-      const textWidth = tagText.length * this.fontSize * 0.6
-      const tagWidth = textWidth + this.padding * 2
-      const tagHeight = this.fontSize + this.padding * 2
+      const textWidth = tagText.length * absFontSize * 0.6
+      const tagWidth = textWidth + absPadding * 2
+      const tagHeight = absFontSize + absPadding * 2
 
       // 换行处理
-      if (currentX + tagWidth > absX + this.maxWidth && currentX > absX) {
+      if (currentX + tagWidth > absX + absMaxWidth && currentX > absX) {
         currentX = absX
-        currentY += rowHeight + this.gap
+        currentY += rowHeight + absGap
         rowHeight = 0
       }
 
@@ -68,9 +76,9 @@ class TagCloud extends Component {
 
       // 标签文字
       const tagTextEl = new paper.PointText({
-        point: [currentX + tagWidth / 2, currentY + tagHeight / 2 + this.fontSize / 3],
+        point: [currentX + tagWidth / 2, currentY + tagHeight / 2 + absFontSize / 3],
         content: tagText,
-        fontSize: this.fontSize,
+        fontSize: absFontSize,
         fontFamily: this.fontFamily || 'Microsoft YaHei',
         fillColor: new paper.Color(tag.color || '#4338ca'),
         justification: 'center',
@@ -78,7 +86,7 @@ class TagCloud extends Component {
       paper.project.activeLayer.addChild(tagTextEl)
       this._pathElements.push(tagTextEl)
 
-      currentX += tagWidth + this.gap
+      currentX += tagWidth + absGap
       rowHeight = Math.max(rowHeight, tagHeight)
     }
   }

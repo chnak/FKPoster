@@ -2,6 +2,8 @@
  * 组件类
  * 可复用的元素组合，支持相对坐标
  */
+const { toPixels } = require('../utils/unit-converter')
+
 class Component {
   constructor(config = {}) {
     this.id = config.id || `component-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -54,11 +56,13 @@ class Component {
     return this.addElement(new ImageElement(config))
   }
 
+  /**
+   * 解析值（兼容旧接口）
+   * @param {string|number} value - 值
+   * @param {number} reference - 参考值
+   */
   _resolvePercent(value, reference) {
-    if (typeof value === 'string' && value.endsWith('%')) {
-      return (parseFloat(value) / 100) * reference
-    }
-    return value !== undefined ? value : 0
+    return toPixels(value, { width: reference, height: reference })
   }
 
   initialize(paper) {
@@ -86,13 +90,15 @@ class Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    // 计算组件的绝对位置
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+
+    // 计算组件的绝对位置（支持百分比、vw、vh、rpx 等）
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
 
     // 计算组件的绝对尺寸
-    const absWidth = this._resolvePercent(this.width, context.width)
-    const absHeight = this._resolvePercent(this.height, context.height)
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
 
     // 渲染背景
     if (this._bgElement && this._bgElement._paperItem) {
@@ -115,8 +121,10 @@ class Component {
       const relX = element._originalX
       const relY = element._originalY
 
-      const childX = this._resolvePercent(relX, absWidth)
-      const childY = this._resolvePercent(relY, absHeight)
+      // 子元素在自己的组件空间内计算
+      const childContext = { width: absWidth, height: absHeight }
+      const childX = toPixels(relX, childContext, 'x')
+      const childY = toPixels(relY, childContext, 'y')
       const absoluteX = absX + childX
       const absoluteY = absY + childY
 

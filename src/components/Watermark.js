@@ -2,6 +2,7 @@
  * 水印组件
  */
 const { Component } = require('../core/Component')
+const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Watermark extends Component {
   constructor(config = {}) {
@@ -26,8 +27,12 @@ class Watermark extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absFontSize = toFontSizePixels(this.fontSize, context2d)
 
     // 清理旧元素
     if (this._paperItem && this._paperItem.parent) {
@@ -36,10 +41,11 @@ class Watermark extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
+    // Paper.js 中 point 的 y 是文字基线，需要偏移 fontSize/3
     const label = new paper.PointText({
-      point: [absX, absY],
+      point: [absX, absY + absFontSize / 3],
       content: this.text,
-      fontSize: this.fontSize,
+      fontSize: absFontSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
       fillColor: new paper.Color(this.color),
       justification: this.align,

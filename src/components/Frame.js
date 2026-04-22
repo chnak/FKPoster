@@ -2,6 +2,7 @@
  * 装饰边框组件 - 多种风格
  */
 const { Component } = require('../core/Component')
+const { toPixels } = require('../utils/unit-converter')
 
 class Frame extends Component {
   constructor(config = {}) {
@@ -27,8 +28,16 @@ class Frame extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+    const absPadding = toPixels(this.padding, context2d, 'width')
+    const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
+    const absRadius = toPixels(this.radius, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -38,14 +47,14 @@ class Frame extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
-    const effectiveX = absX + this.padding
-    const effectiveY = absY + this.padding
-    const effectiveWidth = this.width - this.padding * 2
-    const effectiveHeight = this.height - this.padding * 2
+    const effectiveX = absX + absPadding
+    const effectiveY = absY + absPadding
+    const effectiveWidth = absWidth - absPadding * 2
+    const effectiveHeight = absHeight - absPadding * 2
 
     const strokeOpts = {
       strokeColor: new paper.Color(this.color),
-      strokeWidth: this.borderWidth,
+      strokeWidth: absBorderWidth,
     }
 
     switch (this.style) {
@@ -54,7 +63,7 @@ class Frame extends Component {
         this._addItem(new paper.Path.Rectangle({
           point: [effectiveX, effectiveY],
           size: [effectiveWidth, effectiveHeight],
-          radius: this.radius,
+          radius: absRadius,
           ...strokeOpts,
         }), paper)
         break
@@ -64,13 +73,13 @@ class Frame extends Component {
         this._addItem(new paper.Path.Rectangle({
           point: [effectiveX, effectiveY],
           size: [effectiveWidth, effectiveHeight],
-          radius: this.radius,
+          radius: absRadius,
           ...strokeOpts,
         }), paper)
         this._addItem(new paper.Path.Rectangle({
           point: [effectiveX + 8, effectiveY + 8],
           size: [effectiveWidth - 16, effectiveHeight - 16],
-          radius: this.radius,
+          radius: absRadius,
           ...strokeOpts,
         }), paper)
         break
@@ -80,7 +89,7 @@ class Frame extends Component {
         const dashed = new paper.Path.Rectangle({
           point: [effectiveX, effectiveY],
           size: [effectiveWidth, effectiveHeight],
-          radius: this.radius,
+          radius: absRadius,
           ...strokeOpts,
         })
         dashed.dashArray = [10, 5]
@@ -92,9 +101,9 @@ class Frame extends Component {
         const dotted = new paper.Path.Rectangle({
           point: [effectiveX, effectiveY],
           size: [effectiveWidth, effectiveHeight],
-          radius: this.radius,
+          radius: absRadius,
           strokeColor: new paper.Color(this.color),
-          strokeWidth: this.borderWidth,
+          strokeWidth: absBorderWidth,
           dashArray: [2, 4],
         })
         this._addItem(dotted, paper)
@@ -183,7 +192,7 @@ class Frame extends Component {
         const modernPath = new paper.Path.Rectangle({
           point: [effectiveX, effectiveY],
           size: [effectiveWidth, effectiveHeight],
-          radius: this.radius,
+          radius: absRadius,
           ...strokeOpts,
         })
         modernPath.dashArray = [20, 5, 5, 5]
@@ -211,7 +220,7 @@ class Frame extends Component {
           ornament.add(new paper.Point(fx + fCornerSize, fy + fCornerSize / 2))
           ornament.add(new paper.Point(fx + fCornerSize, fy + fCornerSize))
           ornament.strokeColor = new paper.Color(this.color)
-          ornament.strokeWidth = this.borderWidth
+          ornament.strokeWidth = absBorderWidth
           ornament.rotate(rotation, new paper.Point(fx + fCornerSize, fy + fCornerSize))
           this._addItem(ornament, paper)
         })
@@ -221,7 +230,7 @@ class Frame extends Component {
         this._addItem(new paper.Path.Rectangle({
           point: [effectiveX, effectiveY],
           size: [effectiveWidth, effectiveHeight],
-          radius: this.radius,
+          radius: absRadius,
           ...strokeOpts,
         }), paper)
     }

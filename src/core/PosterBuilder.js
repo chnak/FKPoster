@@ -235,7 +235,7 @@ class PosterBuilder {
    * @param {string} outputDir
    */
   async exportSVG(filename, outputDir = '.') {
-    this.render()
+    await this.render()
 
     const path = require('path')
     const fs = require('fs')

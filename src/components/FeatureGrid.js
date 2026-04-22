@@ -3,6 +3,7 @@
  */
 const { Component } = require('../core/Component')
 const { Feature } = require('./Feature')
+const { toPixels } = require('../utils/unit-converter')
 
 class FeatureGrid extends Component {
   constructor(config = {}) {
@@ -33,8 +34,16 @@ class FeatureGrid extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 转换单位
+    const absItemWidth = toPixels(this.itemWidth, context2d, 'width')
+    const absItemHeight = toPixels(this.itemHeight, context2d, 'height')
+    const absGap = toPixels(this.gap, context2d, 'width')
+    const absPadding = toPixels(this.padding, context2d, 'width')
+    const absRadius = toPixels(this.radius, context2d, 'width')
 
     // 清理旧组件
     for (const comp of this._featureComponents) {
@@ -50,15 +59,15 @@ class FeatureGrid extends Component {
 
     // 计算网格总尺寸
     const rows = Math.ceil(this.items.length / this.columns)
-    const totalWidth = this.columns * this.itemWidth + (this.columns - 1) * this.gap + this.padding * 2
-    const totalHeight = rows * this.itemHeight + (rows - 1) * this.gap + this.padding * 2
+    const totalWidth = this.columns * absItemWidth + (this.columns - 1) * absGap + absPadding * 2
+    const totalHeight = rows * absItemHeight + (rows - 1) * absGap + absPadding * 2
 
     // 绘制背景
     if (this.backgroundColor) {
       const bg = new paper.Path.Rectangle({
         point: [absX, absY],
         size: [totalWidth, totalHeight],
-        radius: this.radius,
+        radius: absRadius,
         fillColor: new paper.Color(this.backgroundColor),
         strokeColor: this.borderColor ? new paper.Color(this.borderColor) : null,
         strokeWidth: this.borderColor ? 1 : 0,
@@ -73,15 +82,15 @@ class FeatureGrid extends Component {
       const col = i % this.columns
       const row = Math.floor(i / this.columns)
 
-      const itemX = absX + this.padding + col * (this.itemWidth + this.gap)
-      const itemY = absY + this.padding + row * (this.itemHeight + this.gap)
+      const itemX = absX + absPadding + col * (absItemWidth + absGap)
+      const itemY = absY + absPadding + row * (absItemHeight + absGap)
 
       // 创建特性组件
       const feature = new Feature({
         x: itemX,
         y: itemY,
-        width: this.itemWidth,
-        height: this.itemHeight,
+        width: absItemWidth,
+        height: absItemHeight,
         icon: item.icon,
         title: item.title,
         description: item.description,

@@ -2,6 +2,7 @@
  * 矩形元素
  */
 const { BaseElement } = require('../core/BaseElement')
+const { toPixels } = require('../utils/unit-converter')
 
 class RectElement extends BaseElement {
   constructor(config = {}) {
@@ -18,10 +19,11 @@ class RectElement extends BaseElement {
   }
 
   _createPaperItem(paper) {
+    // Use numeric placeholder values since render() will calculate proper values
     const rect = new paper.Path.Rectangle({
       point: [0, 0],
-      size: [this.width, this.height],
-      radius: this.borderRadius
+      size: [100, 100],
+      radius: typeof this.borderRadius === 'string' ? 0 : this.borderRadius
     })
 
     if (this.fillColor) {
@@ -40,17 +42,15 @@ class RectElement extends BaseElement {
     if (!this._initialized) this.initialize(paper)
     if (!this._paperItem) return
 
-    // 解析尺寸
-    const width = this._resolvePercent(this.width, context.width)
-    const height = this._resolvePercent(this.height, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
 
-    // 更新尺寸
-    this._paperItem.bounds.width = width
-    this._paperItem.bounds.height = height
+    // 解析尺寸（支持百分比、vw、vh、rpx 等）
+    const width = toPixels(this.width, context2d, 'width')
+    const height = toPixels(this.height, context2d, 'height')
 
     // 解析位置
-    const x = this._resolvePercent(this.x, context.width)
-    const y = this._resolvePercent(this.y, context.height)
+    const x = toPixels(this.x, context2d, 'x')
+    const y = toPixels(this.y, context2d, 'y')
 
     // 支持 anchor 定位：[0,0] = 左上角，[0.5, 0.5] = 中心点
     const anchorX = this.anchor ? this.anchor[0] : 0
@@ -58,20 +58,26 @@ class RectElement extends BaseElement {
     const posX = x - width * anchorX
     const posY = y - height * anchorY
 
-    this._paperItem.bounds.x = posX
-    this._paperItem.bounds.y = posY
+    // 重建矩形以确保路径数据正确
+    this._paperItem.remove()
+    this._paperItem = new paper.Path.Rectangle({
+      point: [posX, posY],
+      size: [width, height],
+      radius: typeof this.borderRadius === 'string' ? 0 : toPixels(this.borderRadius, context2d, 'width')
+    })
+
+    if (this.fillColor) {
+      this._paperItem.fillColor = new paper.Color(this.fillColor)
+    }
+    if (this.strokeColor) {
+      this._paperItem.strokeColor = new paper.Color(this.strokeColor)
+      this._paperItem.strokeWidth = this.strokeWidth
+    }
 
     // 应用样式
     this._paperItem.opacity = this.opacity
     this._paperItem.rotation = this.rotation
     this._paperItem.visible = this.visible
-  }
-
-  _resolvePercent(value, reference) {
-    if (typeof value === 'string' && value.endsWith('%')) {
-      return (parseFloat(value) / 100) * reference
-    }
-    return value
   }
 }
 

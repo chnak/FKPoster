@@ -3,6 +3,7 @@
  */
 const { Component } = require('../core/Component')
 const { getFontFallbackChain } = require('../fonts')
+const { toPixels } = require('../utils/unit-converter')
 
 class Icon extends Component {
   constructor(config = {}) {
@@ -43,8 +44,10 @@ class Icon extends Component {
   render(paper, context = {}) {
     if (!this.visible) return
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+    const absSize = toPixels(this.size, context2d, 'width')
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -60,10 +63,11 @@ class Icon extends Component {
 
     // 背景
     if (this.backgroundColor || this.borderColor) {
+      const absRadius = toPixels(this.radius, context2d, 'width')
       const bg = new paper.Path.Rectangle({
         point: [absX, absY],
-        size: [this.size, this.size],
-        radius: this.radius,
+        size: [absSize, absSize],
+        radius: absRadius,
       })
 
       if (this.backgroundColor) {
@@ -72,7 +76,7 @@ class Icon extends Component {
 
       if (this.borderColor) {
         bg.strokeColor = new paper.Color(this.borderColor)
-        bg.strokeWidth = this.borderWidth
+        bg.strokeWidth = toPixels(this.borderWidth, context2d, 'width')
       }
 
       paper.project.activeLayer.addChild(bg)
@@ -88,13 +92,13 @@ class Icon extends Component {
     if (isImagePath(this.icon)) {
       // 图片图标
       const padding = this.backgroundColor ? 8 : 0
-      const iconSize = this.size - padding * 2
+      const iconSize = absSize - padding * 2
 
       this._loadImage(paper, this.icon).then(raster => {
         if (raster && raster.loaded) {
           const scale = iconSize / Math.max(raster.width, raster.height)
           raster.scale(scale, scale)
-          raster.position = new paper.Point(absX + this.size / 2, absY + this.size / 2)
+          raster.position = new paper.Point(absX + absSize / 2, absY + absSize / 2)
           if (paper.project && paper.project.activeLayer) {
             paper.project.activeLayer.addChild(raster)
           }
@@ -103,10 +107,10 @@ class Icon extends Component {
       })
     } else {
       // Emoji 或文字图标 - 使用字体回退链
-      const fontSize = Math.min(this.size * 0.6, 64)
+      const fontSize = Math.min(absSize * 0.6, 64)
       const fontFamily = getFontFallbackChain(null, this.icon)
       const textItem = new paper.PointText({
-        point: [absX + this.size / 2, absY + this.size / 2 + fontSize / 3],
+        point: [absX + absSize / 2, absY + absSize / 2 + fontSize / 3],
         content: this.icon,
         fontSize,
         fontFamily,
