@@ -181,6 +181,7 @@ class Quote extends Component {
       })
       textEl.initialize(paper)
       textEl.render(paper, context)
+      if (textEl._paperItem) textEl._paperItem.bringToFront()
       this._textElements.push(textEl)
     }
 
@@ -205,6 +206,7 @@ class Quote extends Component {
       })
       this._authorElement.initialize(paper)
       this._authorElement.render(paper, context)
+      if (this._authorElement._paperItem) this._authorElement._paperItem.bringToFront()
     }
 
     // 更新引号
@@ -213,6 +215,7 @@ class Quote extends Component {
       this._quoteMarkElement.y = absY + absPadding + absFontSize
       this._quoteMarkElement.fontSize = absFontSize * 2
       this._quoteMarkElement.render(paper, context)
+      this._quoteMarkElement._paperItem.bringToFront()
     }
   }
 
