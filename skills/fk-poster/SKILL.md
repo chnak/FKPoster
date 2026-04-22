@@ -44,7 +44,7 @@ PosterBuilder (海报构建器)
 ## 快速开始
 
 ```javascript
-const { PosterBuilder, TextElement, Button, Badge } = require('poster-plugin-v2')
+const { PosterBuilder, TextElement, Button, Badge } = require('@chnak/poster')
 
 async function main() {
   // 1. 创建海报构建器
@@ -1152,7 +1152,7 @@ new Star({
 ## 完整示例
 
 ```javascript
-const { PosterBuilder, TextElement, Button, Badge, Card, Avatar, Rating, Progress } = require('poster-plugin-v2')
+const { PosterBuilder, TextElement, Button, Badge, Card, Avatar, Rating, Progress } = require('@chnak/poster')
 
 async function main() {
   // 创建海报
