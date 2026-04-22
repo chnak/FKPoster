@@ -107,25 +107,31 @@ class Component {
       if (!element.render) continue
 
       // 子元素位置是相对于组件的，转为绝对坐标
-      const childX = this._resolvePercent(element.x, absWidth)
-      const childY = this._resolvePercent(element.y, absHeight)
+      // 注意：使用 _originalX/_originalY 保存原始相对坐标，避免被后续渲染修改
+      if (element._originalX === undefined) {
+        element._originalX = element.x
+        element._originalY = element.y
+      }
+
+      const relX = element._originalX
+      const relY = element._originalY
+
+      const childX = this._resolvePercent(relX, absWidth)
+      const childY = this._resolvePercent(relY, absHeight)
       const absoluteX = absX + childX
       const absoluteY = absY + childY
 
-      // 临时修改子元素的坐标为绝对坐标
-      const originalX = element.x
-      const originalY = element.y
+      // 临时修改子元素的坐标为绝对坐标进行渲染
       element.x = absoluteX
       element.y = absoluteY
 
-      // 调用子元素的 render
       if (element._initialized) {
         element.render(paper, context)
       }
 
-      // 恢复子元素的坐标
-      element.x = originalX
-      element.y = originalY
+      // 恢复子元素的坐标为原始相对值
+      element.x = relX
+      element.y = relY
     }
   }
 

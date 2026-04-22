@@ -16,8 +16,8 @@ class BaseElement {
     this.width = config.width
     this.height = config.height
 
-    // 锚点 [0-1, 0-1]，默认左上角
-    this.anchor = config.anchor || [0, 0]
+    // 锚点 [0-1, 0-1]，默认左上角 [0, 0]
+    this.anchor = config.anchor !== undefined ? config.anchor : [0, 0]
 
     // 样式
     this.opacity = config.opacity !== undefined ? config.opacity : 1

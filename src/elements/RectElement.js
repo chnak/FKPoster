@@ -40,10 +40,6 @@ class RectElement extends BaseElement {
     if (!this._initialized) this.initialize(paper)
     if (!this._paperItem) return
 
-    // 解析位置
-    const x = this._resolvePercent(this.x, context.width)
-    const y = this._resolvePercent(this.y, context.height)
-
     // 解析尺寸
     const width = this._resolvePercent(this.width, context.width)
     const height = this._resolvePercent(this.height, context.height)
@@ -52,8 +48,14 @@ class RectElement extends BaseElement {
     this._paperItem.bounds.width = width
     this._paperItem.bounds.height = height
 
-    // 设置位置（矩形中心点）
-    this._paperItem.position = new paper.Point(x, y)
+    // 解析位置
+    const x = this._resolvePercent(this.x, context.width)
+    const y = this._resolvePercent(this.y, context.height)
+
+    // RectElement 使用 bounds 的左上角定位 (point)
+    // 这样 x=0, y=0 意味着矩形的左上角在指定位置
+    this._paperItem.bounds.x = x
+    this._paperItem.bounds.y = y
 
     // 应用样式
     this._paperItem.opacity = this.opacity
