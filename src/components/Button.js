@@ -81,13 +81,10 @@ class Button extends Component {
     }
     this._bgElement.initialize(paper)
 
-    // 初始化文字
-    const textX = (this._finalWidth || 200) / 2
-    const textY = (this._finalHeight || 60) / 2
-
+    // 初始化文字 - 居中定位
     this._textElement = new TextElement({
-      x: textX,
-      y: textY,
+      x: (this._finalWidth || 200) / 2,
+      y: (this._finalHeight || 60) / 2,
       text: this.text,
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
@@ -125,7 +122,7 @@ class Button extends Component {
     const absX = this._resolvePercent(this.x, context.width)
     const absY = this._resolvePercent(this.y, context.height)
 
-    // 更新背景位置
+    // 更新背景位置 - 居中定位
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement._paperItem.position = new paper.Point(
         absX + (this._finalWidth || 200) / 2,
@@ -133,14 +130,14 @@ class Button extends Component {
       )
     }
 
-    // 更新文字位置
+    // 更新文字位置 - 居中定位
     if (this._textElement && this._textElement._paperItem) {
       this._textElement.x = absX + (this._finalWidth || 200) / 2
       this._textElement.y = absY + (this._finalHeight || 60) / 2
       this._textElement.render(paper, context)
     }
 
-    // 更新图标位置
+    // 更新图标位置 - 居中定位
     if (this._iconElement && this._iconElement._paperItem) {
       const iconSize = Math.min(this._finalHeight * 0.5, this.fontSize)
       const iconX = this.iconPosition === 'left'

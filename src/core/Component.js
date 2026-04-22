@@ -96,10 +96,9 @@ class Component {
 
     // 渲染背景
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(
-        absX + absWidth / 2,
-        absY + absHeight / 2
-      )
+      // 使用 bounds 的左上角定位，与 RectElement 的行为保持一致
+      this._bgElement._paperItem.bounds.x = absX
+      this._bgElement._paperItem.bounds.y = absY
     }
 
     // 渲染子元素

@@ -160,20 +160,16 @@ class Quote extends Component {
     const absX = this._resolvePercent(this.x, context.width)
     const absY = this._resolvePercent(this.y, context.height)
 
-    // 背景
+    // 背景 - 使用左上角定位
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(
-        absX + this.width / 2,
-        absY + this._totalHeight / 2
-      )
+      this._bgElement._paperItem.bounds.x = absX
+      this._bgElement._paperItem.bounds.y = absY
     }
 
-    // 左边框
+    // 左边框 - 使用左上角定位
     if (this._borderElement && this._borderElement._paperItem) {
-      this._borderElement._paperItem.position = new paper.Point(
-        absX + this.borderWidth / 2,
-        absY + this._totalHeight / 2
-      )
+      this._borderElement._paperItem.bounds.x = absX
+      this._borderElement._paperItem.bounds.y = absY
     }
 
     // 引号

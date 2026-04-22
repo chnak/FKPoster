@@ -57,7 +57,7 @@ class Badge extends Component {
     })
     this._bgElement.initialize(paper)
 
-    // 文字
+    // 文字 - 居中定位
     this._textElement = new TextElement({
       x: this._badgeWidth / 2,
       y: this._badgeHeight / 2,
@@ -78,7 +78,7 @@ class Badge extends Component {
     const absX = this._resolvePercent(this.x, context.width)
     const absY = this._resolvePercent(this.y, context.height)
 
-    // 背景位置
+    // 背景位置 - 居中定位
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement._paperItem.position = new paper.Point(
         absX + this._badgeWidth / 2,
@@ -86,7 +86,7 @@ class Badge extends Component {
       )
     }
 
-    // 文字位置
+    // 文字位置 - 居中定位
     if (this._textElement && this._textElement._paperItem) {
       this._textElement.x = absX + this._badgeWidth / 2
       this._textElement.y = absY + this._badgeHeight / 2

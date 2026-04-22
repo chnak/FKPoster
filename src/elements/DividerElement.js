@@ -35,17 +35,19 @@ class DividerElement extends BaseElement {
     if (!this._initialized) this.initialize(paper)
     if (!this._paperItem) return
 
-    // 计算位置（考虑对齐）
-    let absoluteX = this._resolvePercent(this.x, context.width)
-    let absoluteY = this._resolvePercent(this.y, context.height)
+    // 计算位置
+    const x = this._resolvePercent(this.x, context.width)
+    const y = this._resolvePercent(this.y, context.height)
 
-    // 应用锚点偏移
+    // 支持 anchor 定位
     const anchorX = this.anchor ? this.anchor[0] : 0
     const anchorY = this.anchor ? this.anchor[1] : 0
-    absoluteX = absoluteX - (this.width || 0) * anchorX
-    absoluteY = absoluteY - (this.height || 0) * anchorY
+    const posX = x - this.width * anchorX
+    const posY = y - anchorY
 
-    this._paperItem.position = new paper.Point(absoluteX, absoluteY)
+    this._paperItem.bounds.x = posX
+    this._paperItem.bounds.y = posY
+
     this._paperItem.opacity = this.opacity
     this._paperItem.visible = this.visible
   }

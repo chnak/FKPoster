@@ -52,10 +52,14 @@ class RectElement extends BaseElement {
     const x = this._resolvePercent(this.x, context.width)
     const y = this._resolvePercent(this.y, context.height)
 
-    // RectElement 使用 bounds 的左上角定位 (point)
-    // 这样 x=0, y=0 意味着矩形的左上角在指定位置
-    this._paperItem.bounds.x = x
-    this._paperItem.bounds.y = y
+    // 支持 anchor 定位：[0,0] = 左上角，[0.5, 0.5] = 中心点
+    const anchorX = this.anchor ? this.anchor[0] : 0
+    const anchorY = this.anchor ? this.anchor[1] : 0
+    const posX = x - width * anchorX
+    const posY = y - height * anchorY
+
+    this._paperItem.bounds.x = posX
+    this._paperItem.bounds.y = posY
 
     // 应用样式
     this._paperItem.opacity = this.opacity

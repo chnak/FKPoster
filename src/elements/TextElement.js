@@ -27,7 +27,7 @@ class TextElement extends BaseElement {
       fontFamily: fontChain,
       fontWeight: this.fontWeight,
       fillColor: this.color,
-      justification: this.textAlign
+      justification: 'left'
     })
 
     return text
@@ -45,13 +45,19 @@ class TextElement extends BaseElement {
     // 解析字体大小
     const fontSize = this._resolvePercent(this.fontSize, context.height)
 
-    // 根据对齐方式设置位置
-    // point是文本基线的起始点（left对齐时），position是中心点
-    if (this.textAlign === 'center') {
-      this._paperItem.position = new paper.Point(x, y)
-    } else {
-      this._paperItem.point = new paper.Point(x, y)
-    }
+    // 支持 anchor 定位：[0,0] = 左上角基线，[0.5, 0.5] = 中心点
+    const anchorX = this.anchor ? this.anchor[0] : 0
+    const anchorY = this.anchor ? this.anchor[1] : 0
+
+    // 获取文字尺寸
+    const textWidth = this._paperItem.bounds.width
+    const textHeight = this._paperItem.bounds.height
+
+    const posX = x - textWidth * anchorX
+    const posY = y - textHeight * anchorY
+
+    this._paperItem.bounds.x = posX
+    this._paperItem.bounds.y = posY
 
     this._paperItem.fontSize = fontSize
 

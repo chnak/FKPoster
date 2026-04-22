@@ -48,8 +48,14 @@ class CircleElement extends BaseElement {
     this._paperItem.bounds.width = radius * 2
     this._paperItem.bounds.height = radius * 2
 
-    // 设置位置
-    this._paperItem.position = new paper.Point(x, y)
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0
+    const anchorY = this.anchor ? this.anchor[1] : 0
+    const posX = x - radius * 2 * anchorX
+    const posY = y - radius * 2 * anchorY
+
+    this._paperItem.bounds.x = posX
+    this._paperItem.bounds.y = posY
 
     // 应用样式
     this._paperItem.opacity = this.opacity

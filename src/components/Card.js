@@ -171,10 +171,8 @@ class Card extends Component {
 
     // 背景
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.position = new paper.Point(
-        absX + this.width / 2,
-        absY + this._actualHeight / 2
-      )
+      this._bgElement._paperItem.bounds.x = absX
+      this._bgElement._paperItem.bounds.y = absY
     }
 
     // 标题

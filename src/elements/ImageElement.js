@@ -47,14 +47,8 @@ class ImageElement extends BaseElement {
     if (!this.visible) return
 
     // 处理百分比位置
-    let x = this._resolvePercent(this.x, context.width)
-    let y = this._resolvePercent(this.y, context.height)
-
-    // 应用锚点偏移
-    const anchorX = this.anchor ? this.anchor[0] : 0
-    const anchorY = this.anchor ? this.anchor[1] : 0
-    x = x - this.width * anchorX
-    y = y - this.height * anchorY
+    const x = this._resolvePercent(this.x, context.width)
+    const y = this._resolvePercent(this.y, context.height)
 
     // 处理百分比尺寸
     const width = this._resolvePercent(
@@ -65,6 +59,12 @@ class ImageElement extends BaseElement {
       typeof this.height === 'string' ? this.height : this.height,
       context.height
     )
+
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0
+    const anchorY = this.anchor ? this.anchor[1] : 0
+    const posX = x - width * anchorX
+    const posY = y - height * anchorY
 
     // 如果图片已加载
     if (this._raster && this._raster.loaded) {
@@ -78,8 +78,9 @@ class ImageElement extends BaseElement {
       this._raster.bounds.width = width
       this._raster.bounds.height = height
 
-      // 设置位置
-      this._raster.position = new paper.Point(x, y)
+      // 使用 bounds 定位
+      this._raster.bounds.x = posX
+      this._raster.bounds.y = posY
 
       // 应用样式
       this._raster.opacity = this.opacity
@@ -89,7 +90,8 @@ class ImageElement extends BaseElement {
       // 更新占位符
       this._paperItem.bounds.width = width
       this._paperItem.bounds.height = height
-      this._paperItem.position = new paper.Point(x, y)
+      this._paperItem.bounds.x = posX
+      this._paperItem.bounds.y = posY
       this._paperItem.opacity = this.opacity
       this._paperItem.rotation = this.rotation
       this._paperItem.visible = this.visible
