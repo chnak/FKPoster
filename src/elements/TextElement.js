@@ -54,13 +54,15 @@ class TextElement extends BaseElement {
 
     // 获取文字尺寸
     const textWidth = this._paperItem.bounds.width
-    const textHeight = this._paperItem.bounds.height
 
+    // Paper.js PointText uses matrix for SVG export, not bounds
+    // So we need to directly set the matrix translation
     const posX = absoluteX - textWidth * anchorX
-    const posY = absoluteY - textHeight * anchorY
+    const posY = absoluteY
 
-    this._paperItem.bounds.x = posX
-    this._paperItem.bounds.y = posY
+    // Apply position via matrix translation for correct SVG export
+    this._paperItem.matrix.tx = posX
+    this._paperItem.matrix.ty = posY
 
     this._paperItem.fontSize = fontSize
 

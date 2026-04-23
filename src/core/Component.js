@@ -66,7 +66,7 @@ class Component {
   }
 
   initialize(paper) {
-    // 创建背景
+    // 创建背景 - 使用 zIndex - 9999 确保在底层
     if (this.backgroundColor) {
       const { RectElement } = require('../elements/RectElement')
       this._bgElement = new RectElement({
@@ -74,14 +74,21 @@ class Component {
         y: 0,
         width: this.width,
         height: this.height,
-        fillColor: this.backgroundColor
+        fillColor: this.backgroundColor,
+        zIndex: this.zIndex - 9999
       })
       this._bgElement.initialize(paper)
     }
 
-    // 初始化子元素
+    // 初始化子元素 - 设置正确的 zIndex
     for (const element of this.elements) {
       if (element.initialize) {
+        // 子元素的 zIndex 应该基于组件的 zIndex
+        if (element.zIndex !== undefined) {
+          element.zIndex = (this.zIndex - 1) + element.zIndex
+        } else {
+          element.zIndex = (this.zIndex - 1)
+        }
         element.initialize(paper)
       }
     }
@@ -100,15 +107,18 @@ class Component {
     const absWidth = toPixels(this.width, context2d, 'width')
     const absHeight = toPixels(this.height, context2d, 'height')
 
-    // 渲染背景
+    // 渲染背景 - zIndex 最低 (zIndex - 9999)
     if (this._bgElement && this._bgElement._paperItem) {
-      // 使用 bounds 的左上角定位，与 RectElement 的行为保持一致
       this._bgElement._paperItem.bounds.x = absX
       this._bgElement._paperItem.bounds.y = absY
+      this._bgElement.render(paper, context)
+      this._bgElement._paperItem.zIndex = this.zIndex - 9999
     }
 
-    // 渲染子元素
-    for (const element of this.elements) {
+    // 渲染子元素 - 按 zIndex 从低到高排序
+    const sortedElements = [...this.elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+
+    for (const element of sortedElements) {
       if (!element.render) continue
 
       // 子元素位置是相对于组件的，转为绝对坐标
@@ -134,6 +144,10 @@ class Component {
 
       if (element._initialized) {
         element.render(paper, context)
+        // 确保子元素的 zIndex 正确（在组件内部，子元素比背景层级高）
+        if (element._paperItem) {
+          element._paperItem.zIndex = element.zIndex
+        }
       }
 
       // 恢复子元素的坐标为原始相对值

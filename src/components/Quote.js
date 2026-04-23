@@ -1,10 +1,7 @@
 /**
  * 引用块组件
- * 支持自动换行
  */
 const { Component } = require('../core/Component')
-const { RectElement } = require('../elements/RectElement')
-const { TextElement } = require('../elements/TextElement')
 const { getFontFallbackChain } = require('../fonts')
 const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
@@ -70,58 +67,17 @@ class Quote extends Component {
 
   initialize(paper) {
     this._paper = paper
-
-    // 背景 - 使用临时尺寸
-    this._bgElement = new RectElement({
-      x: 0,
-      y: 0,
-      width: 1,
-      height: 1,
-      fillColor: this.backgroundColor,
-      borderRadius: 0,
-      opacity: this.opacity,
-    })
-    this._bgElement.initialize(paper)
-
-    // 左边框 - 使用临时尺寸
-    this._borderElement = new RectElement({
-      x: 0,
-      y: 0,
-      width: 1,
-      height: 1,
-      fillColor: this.borderColor,
-      opacity: this.opacity,
-    })
-    this._borderElement.initialize(paper)
-
-    // 引号
-    this._quoteMarkElement = new TextElement({
-      x: 0,
-      y: 0,
-      text: '"',
-      fontSize: 36,
-      fontFamily: this.fontFamily,
-      color: this.borderColor,
-      textAlign: 'left',
-      opacity: this.opacity,
-    })
-    this._quoteMarkElement.initialize(paper)
-
-    // 引用文字元素
-    this._textElements = []
-
-    // 作者
-    this._authorElement = null
+    this._items = []
   }
 
   render(paper, context = {}) {
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
     const absY = toPixels(this.y, context2d, 'y')
 
-    // 转换单位
     const absWidth = toPixels(this.width, context2d, 'width')
     const absPadding = toPixels(this.padding, context2d, 'width')
     const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
@@ -129,104 +85,113 @@ class Quote extends Component {
     const absFontSize = toFontSizePixels(this.fontSize, context2d)
 
     // 文字换行计算
-    const textPadding = absPadding + 30
-    const maxTextWidth = absWidth - textPadding - absPadding
+    // 引号在 x=absPadding+2，文字在 x=absPadding+20（间距18px）
+    const textStartX = absPadding + 20
+    // 确保文字在背景框内，留出右侧安全边距
+    const maxTextWidth = absWidth - textStartX - absPadding - 10
+
     const textLines = this._wrapText(paper, this.text, maxTextWidth)
 
     const lineHeight = absFontSize * 1.5
-    const textBlockHeight = textLines.length * lineHeight
-    const authorHeight = this.author ? absFontSize * 1.5 : 0
-    const totalHeight = absPadding * 2 + textBlockHeight + authorHeight
-    const totalHeightVal = Math.max(totalHeight, 80)
+    const quoteMarkFontSize = absFontSize * 2
+    const authorFontSize = absFontSize * 0.85
 
-    // 销毁旧的文本元素
-    for (const el of this._textElements) {
-      if (el) el.destroy()
+    // 计算内容高度 - 用 Paper.js 实际测量文本 bounds
+    // 测量单行文字的实际 ascent + descent
+    const tempText = new paper.PointText({
+      point: [absX, absY],
+      fontSize: absFontSize,
+      fontFamily: getFontFallbackChain(this.fontFamily, textLines[0] || ''),
+    })
+    const firstLineActualHeight = tempText.bounds.height
+
+    // 多行总高度 = 第一行 ascent + (n-1)*lineHeight + 最后一行 descent
+    // Paper.js bounds.height 已经包含 ascent + descent
+    const textBlockActualHeight = firstLineActualHeight + (textLines.length - 1) * lineHeight
+
+    // 作者高度
+    const authorActualHeight = this.author ? authorFontSize * 1.1 : 0
+    // 作者间距
+    const authorGap = this.author ? lineHeight * 1.28 : 0
+
+    const totalContentHeight = absPadding + textBlockActualHeight + authorGap + authorActualHeight + absPadding
+    tempText.remove()
+
+    // 销毁旧元素
+    for (const item of this._items) {
+      item.remove()
     }
-    this._textElements = []
+    this._items = []
 
-    // 先渲染背景和边框（放在下面）
-    if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement.width = absWidth
-      this._bgElement.height = totalHeightVal
-      this._bgElement.borderRadius = absRadius
-      this._bgElement.x = absX + absWidth / 2
-      this._bgElement.y = absY + totalHeightVal / 2
-      this._bgElement.anchor = [0.5, 0.5]
-      this._bgElement.render(paper, context)
-    }
+    // 背景
+    const bgRect = new paper.Path.Rectangle({
+      point: [absX, absY],
+      size: [absWidth, totalContentHeight],
+      radius: absRadius,
+      fillColor: this.backgroundColor,
+    })
+    paper.project.activeLayer.addChild(bgRect)
+    this._items.push(bgRect)
 
-    if (this._borderElement && this._borderElement._paperItem) {
-      this._borderElement.width = absBorderWidth
-      this._borderElement.height = totalHeightVal
-      this._borderElement.x = absX + absBorderWidth / 2
-      this._borderElement.y = absY + totalHeightVal / 2
-      this._borderElement.anchor = [0.5, 0.5]
-      this._borderElement.render(paper, context)
-    }
+    // 左边框
+    const borderRect = new paper.Path.Rectangle({
+      point: [absX, absY],
+      size: [absBorderWidth, totalContentHeight],
+      fillColor: this.borderColor,
+    })
+    paper.project.activeLayer.addChild(borderRect)
+    this._items.push(borderRect)
 
-    // 引用文字（放在上面）
-    const textStartY = absPadding + absFontSize
+    // 引用文字 baseline 偏移量
+    const textBaselineOffset = 16
 
+    // 引号 - 稍低于文字 baseline
+    const quoteMarkY = absY + absPadding + textBaselineOffset + 6
+    const quoteMarkText = new paper.PointText({
+      point: [absX + absPadding + 2, quoteMarkY],
+      content: '"',
+      fontSize: quoteMarkFontSize,
+      fontFamily: getFontFallbackChain(this.fontFamily, '"'),
+      fillColor: this.borderColor,
+    })
+    paper.project.activeLayer.addChild(quoteMarkText)
+    this._items.push(quoteMarkText)
+
+    // 引用文字 - baseline at padding + textBaselineOffset
     for (let i = 0; i < textLines.length; i++) {
-      const textEl = new TextElement({
-        x: absX + absPadding + 30,
-        y: absY + textStartY + i * lineHeight,
-        text: textLines[i],
+      const lineY = absY + absPadding + textBaselineOffset + i * lineHeight
+      const lineText = new paper.PointText({
+        point: [absX + textStartX, lineY],
+        content: textLines[i],
         fontSize: absFontSize,
-        fontFamily: this.fontFamily,
-        color: this.textColor,
-        textAlign: 'left',
-        opacity: this.opacity,
+        fontFamily: getFontFallbackChain(this.fontFamily, textLines[i]),
+        fillColor: this.textColor,
       })
-      textEl.initialize(paper)
-      textEl.render(paper, context)
-      if (textEl._paperItem) textEl._paperItem.bringToFront()
-      this._textElements.push(textEl)
+      paper.project.activeLayer.addChild(lineText)
+      this._items.push(lineText)
     }
 
-    // 销毁旧作者元素
-    if (this._authorElement) {
-      this._authorElement.destroy()
-      this._authorElement = null
-    }
-
-    // 作者
+    // 作者 - 再离左边远一点
     if (this.author) {
-      const authorY = absY + absPadding + textBlockHeight + absFontSize * 1.3
-      this._authorElement = new TextElement({
-        x: absX + absPadding,
-        y: authorY,
-        text: `— ${this.author}`,
-        fontSize: absFontSize * 0.85,
-        fontFamily: this.fontFamily,
-        color: this.authorColor,
-        textAlign: 'left',
-        opacity: this.opacity,
+      const lastLineBaselineY = absY + absPadding + textBaselineOffset + (textLines.length - 1) * lineHeight
+      const authorY = lastLineBaselineY + authorGap
+      const authorText = new paper.PointText({
+        point: [absX + absPadding + 10, authorY],
+        content: `— ${this.author}`,
+        fontSize: authorFontSize,
+        fontFamily: getFontFallbackChain(this.fontFamily, this.author),
+        fillColor: this.authorColor,
       })
-      this._authorElement.initialize(paper)
-      this._authorElement.render(paper, context)
-      if (this._authorElement._paperItem) this._authorElement._paperItem.bringToFront()
-    }
-
-    // 更新引号
-    if (this._quoteMarkElement && this._quoteMarkElement._paperItem) {
-      this._quoteMarkElement.x = absX + absPadding + 10
-      this._quoteMarkElement.y = absY + absPadding + absFontSize
-      this._quoteMarkElement.fontSize = absFontSize * 2
-      this._quoteMarkElement.render(paper, context)
-      this._quoteMarkElement._paperItem.bringToFront()
+      paper.project.activeLayer.addChild(authorText)
+      this._items.push(authorText)
     }
   }
 
   destroy() {
-    if (this._bgElement) this._bgElement.destroy()
-    if (this._borderElement) this._borderElement.destroy()
-    if (this._quoteMarkElement) this._quoteMarkElement.destroy()
-    for (const el of this._textElements) {
-      if (el) el.destroy()
+    for (const item of this._items) {
+      item.remove()
     }
-    if (this._authorElement) this._authorElement.destroy()
+    this._items = []
     super.destroy()
   }
 }
