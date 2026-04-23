@@ -1,7 +1,7 @@
 /**
  * Paper.js Node.js 环境初始化
  */
-const paper = require('paper')
+const paper = require('@chnak/paper')
 
 let initialized = false
 let paperScope = null

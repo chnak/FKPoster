@@ -50,7 +50,7 @@ class PosterBuilder {
     if (this.paper) return
 
     // 加载 paper.js
-    this.paper = require('paper')
+    this.paper = require('@chnak/paper')
     this.paper.setup(new this.paper.Size(this.width, this.height))
     this.project = this.paper.project
     this.canvas = this.project.view.element

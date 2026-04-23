@@ -1,7 +1,7 @@
 {
   "name": "@chnak/poster",
-  "version": "1.0.4",
-  "description": "新一代海报制作插件 - 基于 Paper.js，支持多层级、组件化、相对坐标",
+  "version": "1.0.6",
+  "description": "新一代海报制作插件 - 基于 @chnak/paper，支持多层级、组件化、相对坐标",
   "repository": "https://github.com/chnak/FKPoster",
   "main": "src/index.js",
   "scripts": {
@@ -22,10 +22,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@chnak/paper": "^1.0.3",
     "canvas": "npm:@napi-rs/canvas@^0.1.99",
     "fontkit": "^2.0.4",
     "jsdom": "^16.7.0",
-    "paper": "^0.12.18",
     "qrcode": "^1.5.4"
   },
   "overrides": {

@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@chnak/paper@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@chnak/paper/-/paper-1.0.3.tgz#9449f07dfb001a38af7a7b74f1a00a85e6746006"
+  integrity sha512-Wvg2J7aU0p6bEwTlhaK5bMN40WSV//y9Jocqm4fQhJ2QlAvIUgO9dUyjm49J0sUZ5HsZzVWu7LUF+v4riEyLpw==
+
 "@napi-rs/canvas-android-arm64@0.1.99":
   version "0.1.99"
   resolved "https://registry.npmjs.org/@napi-rs/canvas-android-arm64/-/canvas-android-arm64-0.1.99.tgz#64515bc373a7523f1c7d0683d2199aac207292fe"
@@ -566,11 +571,6 @@ pako@^0.2.5:
   version "0.2.9"
   resolved "https://registry.npmjs.org/pako/-/pako-0.2.9.tgz"
   integrity sha512-NUcwaKxUxWrZLpDG+z/xZaCgQITkA/Dv4V/T6bw7VON6l1Xz/VnrBqrYjZQ12TamKHzITTfOEIYUj48y2KXImA==
-
-paper@^0.12.18:
-  version "0.12.18"
-  resolved "https://registry.npmjs.org/paper/-/paper-0.12.18.tgz"
-  integrity sha512-ZSLIEejQTJZuYHhSSqAf4jXOnii0kPhCJGAnYAANtdS72aNwXJ9cP95tZHgq1tnNpvEwgQhggy+4OarviqTCGw==
 
 parse5@6.0.1:
   version "6.0.1"
