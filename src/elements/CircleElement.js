@@ -55,11 +55,16 @@ class CircleElement extends BaseElement {
     const centerY = y + radius * (1 - 2 * anchorY)
 
     // 重建圆形以确保路径数据正确
-    this._paperItem.remove()
+    const oldItem = this._paperItem
     this._paperItem = new paper.Path.Circle({
       center: [centerX, centerY],
       radius: radius
     })
+
+    // 彻底移除旧 item
+    if (oldItem && oldItem.parent) {
+      oldItem.remove()
+    }
 
     if (this.fillColor) {
       this._paperItem.fillColor = new paper.Color(this.fillColor)

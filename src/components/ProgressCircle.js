@@ -25,8 +25,10 @@ class ProgressCircle extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
 
     if (this.showLabel) {
       this._labelElement = new TextElement({
@@ -46,8 +48,8 @@ class ProgressCircle extends Component {
   }
 
   render(paper, context = {}) {
-    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -56,6 +58,12 @@ class ProgressCircle extends Component {
     // 转换单位
     const absRadius = toPixels(this.radius, context2d, 'width')
     const absStrokeWidth = toPixels(this.strokeWidth, context2d, 'width')
+
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const centerX = absX - absRadius * anchorX
+    const centerY = absY - absRadius * anchorY
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -66,7 +74,7 @@ class ProgressCircle extends Component {
     // 背景圆（填充整个区域）
     if (this.backgroundColor) {
       const bgCircle = new paper.Path.Circle({
-        center: [absX + absRadius, absY + absRadius],
+        center: [centerX + absRadius, centerY + absRadius],
         radius: absRadius + absStrokeWidth / 2,
       })
       bgCircle.fillColor = new paper.Color(this.backgroundColor)
@@ -78,7 +86,7 @@ class ProgressCircle extends Component {
 
     // 轨道（空心圆）
     const trackCircle = new paper.Path.Circle({
-      center: [absX + absRadius, absY + absRadius],
+      center: [centerX + absRadius, centerY + absRadius],
       radius: absRadius,
     })
     trackCircle.fillColor = null
@@ -100,8 +108,8 @@ class ProgressCircle extends Component {
 
       // 起点
       progressArc.moveTo(
-        absX + absRadius + absRadius * Math.cos(startRad),
-        absY + absRadius + absRadius * Math.sin(startRad)
+        centerX + absRadius + absRadius * Math.cos(startRad),
+        centerY + absRadius + absRadius * Math.sin(startRad)
       )
 
       // 弧线上的点
@@ -110,8 +118,8 @@ class ProgressCircle extends Component {
       for (let i = 1; i <= segments; i++) {
         const angle = startRad + angleStep * i
         progressArc.lineTo(
-          absX + absRadius + absRadius * Math.cos(angle),
-          absY + absRadius + absRadius * Math.sin(angle)
+          centerX + absRadius + absRadius * Math.cos(angle),
+          centerY + absRadius + absRadius * Math.sin(angle)
         )
       }
 
@@ -128,8 +136,8 @@ class ProgressCircle extends Component {
     // 标签
     if (this._labelElement && this._labelElement._paperItem) {
       const fontSize = Math.min(Math.max(Math.round(absRadius * 0.35), 12), 48)
-      this._labelElement.x = absX + absRadius
-      this._labelElement.y = absY + absRadius
+      this._labelElement.x = centerX + absRadius
+      this._labelElement.y = centerY + absRadius
       this._labelElement.fontSize = fontSize
       this._labelElement.render(paper, context)
       this._labelElement._paperItem.bringToFront()

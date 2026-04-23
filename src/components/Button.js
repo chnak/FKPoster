@@ -108,40 +108,36 @@ class Button extends Component {
       : (textWidth + absPadding * 2 + iconWidth)
     const finalHeight = absHeight
 
-    // 更新背景
+    // 更新背景 - 使用 anchor: [0.5, 0.5] 让系统自动居中
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = finalWidth
       this._bgElement.height = finalHeight
       this._bgElement.borderRadius = absRadius
       this._bgElement.borderWidth = absBorderWidth
-      // Use center positioning with anchor [0.5, 0.5]
-      this._bgElement.x = absX + finalWidth / 2
-      this._bgElement.y = absY + finalHeight / 2
+      this._bgElement.x = absX
+      this._bgElement.y = absY
       this._bgElement.anchor = [0.5, 0.5]
       this._bgElement.render(paper, context)
     }
 
-    // 更新文字位置
+    // 更新文字位置 - 直接使用 absX, absY 作为中心点
     if (this._textElement && this._textElement._paperItem) {
-      this._textElement.x = absX + finalWidth / 2
-      this._textElement.y = absY + finalHeight / 2
+      this._textElement.x = absX
+      this._textElement.y = absY
       this._textElement.fontSize = absFontSize
       this._textElement.render(paper, context)
       // 确保文字在最上层
       this._textElement._paperItem.bringToFront()
     }
 
-    // 更新图标位置
+    // 更新图标位置 - 使用 anchor: [0.5, 0.5] 自动居中
     if (this._iconElement && this._iconElement._paperItem) {
       const iconSize = Math.min(finalHeight * 0.5, absFontSize)
-      const iconX = this.iconPosition === 'left'
-        ? absX + absPadding + iconSize / 2
-        : absX + finalWidth - absPadding - iconSize / 2
-
-      this._iconElement.x = iconX
-      this._iconElement.y = absY + finalHeight / 2
+      this._iconElement.x = absX
+      this._iconElement.y = absY
       this._iconElement.width = iconSize
       this._iconElement.height = iconSize
+      this._iconElement.anchor = [0.5, 0.5]
       this._iconElement.render(paper, context)
       // 确保图标在最上层
       this._iconElement._paperItem.bringToFront()

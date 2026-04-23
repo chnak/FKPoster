@@ -51,6 +51,7 @@ async function main() {
   })
 
   const padding = 20
+  const centerX = 400  // 画布中心 x 坐标
   poster.initialize()
   const layer = poster.createLayer({ name: 'main', zIndex: 0 })
 
@@ -58,7 +59,7 @@ async function main() {
 
   // CTA 按钮
   const cta = new CTA({
-    x: padding, y: y, width: 200, height: 50,
+    x: centerX, y: y, width: 200, height: 50,
     text: '立即购买', backgroundColor: '#3b82f6', textColor: '#ffffff'
   })
   layer.addElement(cta)
@@ -66,7 +67,7 @@ async function main() {
 
   // Chart 图表
   const chart = new Chart({
-    x: padding, y: y, width: 200, height: 120,
+    x: centerX, y: y, width: 200, height: 120,
     data: [30, 50, 70, 40, 90], labels: ['A', 'B', 'C', 'D', 'E'],
     barColor: '#3b82f6'
   })
@@ -75,7 +76,7 @@ async function main() {
 
   // Arrow 箭头
   const arrow = new Arrow({
-    x: padding + 50, y: y, width: 100, height: 40,
+    x: centerX, y: y, width: 100, height: 40,
     direction: 'right', color: '#64748b'
   })
   layer.addElement(arrow)
@@ -83,7 +84,7 @@ async function main() {
 
   // Barcode 条形码
   const barcode = new Barcode({
-    x: padding, y: y, width: 200, height: 60,
+    x: centerX, y: y, width: 200, height: 60,
     value: '123456789012', format: 'CODE128'
   })
   layer.addElement(barcode)
@@ -91,35 +92,35 @@ async function main() {
 
   // Badge 徽章
   const badge = new Badge({
-    x: padding, y: y, text: '新功能', backgroundColor: '#ef4444'
+    x: centerX, y: y, text: '新功能', backgroundColor: '#ef4444'
   })
   layer.addElement(badge)
   y += 50
 
   // Rating 评分
   const rating = new Rating({
-    x: padding, y: y, value: 4.5, maxValue: 5, size: 20
+    x: centerX, y: y, value: 4.5, maxValue: 5, size: 20
   })
   layer.addElement(rating)
   y += 50
 
   // Chip 标签
   const chip = new Chip({
-    x: padding, y: y, text: '热门', backgroundColor: '#e2e8f0'
+    x: centerX, y: y, text: '热门', backgroundColor: '#e2e8f0'
   })
   layer.addElement(chip)
   y += 50
 
   // Avatar 头像
   const avatar = new Avatar({
-    x: padding, y: y, name: '张三', size: 60, backgroundColor: '#3b82f6'
+    x: centerX, y: y, name: '张三', size: 60, backgroundColor: '#3b82f6'
   })
   layer.addElement(avatar)
   y += 80
 
   // StatCard 统计卡片
   const statCard = new StatCard({
-    x: padding, y: y, width: 200, height: 80,
+    x: centerX, y: y, width: 200, height: 80,
     value: '1,234', label: '总用户', change: '+12%', positive: true
   })
   layer.addElement(statCard)
@@ -127,7 +128,7 @@ async function main() {
 
   // Progress 进度条
   const progress = new Progress({
-    x: padding, y: y, width: 200, height: 12,
+    x: centerX, y: y, width: 200, height: 12,
     value: 75, trackColor: '#e2e8f0', fillColor: '#3b82f6'
   })
   layer.addElement(progress)
@@ -135,7 +136,7 @@ async function main() {
 
   // ProgressCircle 环形进度
   const progressCircle = new ProgressCircle({
-    x: padding, y: y, size: 80,
+    x: centerX, y: y, size: 80,
     value: 65, strokeWidth: 8, strokeColor: '#3b82f6'
   })
   layer.addElement(progressCircle)
@@ -143,7 +144,7 @@ async function main() {
 
   // Button 按钮
   const button = new Button({
-    x: padding, y: y, width: 120, height: 40,
+    x: centerX, y: y, width: 120, height: 40,
     text: '点击', backgroundColor: '#10b981', textColor: '#ffffff'
   })
   layer.addElement(button)
@@ -151,7 +152,7 @@ async function main() {
 
   // CircleElement 圆形
   const circle = new CircleElement({
-    x: padding + 30, y: y, radius: 30,
+    x: centerX, y: y, radius: 30,
     fillColor: '#f59e0b'
   })
   layer.addElement(circle)
@@ -159,7 +160,7 @@ async function main() {
 
   // Star 星星
   const star = new Star({
-    x: padding + 30, y: y, size: 40,
+    x: centerX, y: y, size: 40,
     fillColor: '#eab308', strokeColor: '#ca8a04'
   })
   layer.addElement(star)
@@ -167,7 +168,7 @@ async function main() {
 
   // Seal 印章
   const seal = new Seal({
-    x: padding + 30, y: y, size: 60,
+    x: centerX, y: y, size: 60,
     text: '认证', color: '#ef4444'
   })
   layer.addElement(seal)
@@ -175,7 +176,7 @@ async function main() {
 
   // Ribbon 彩带
   const ribbon = new Ribbon({
-    x: padding, y: y, width: 150, text: '热销商品',
+    x: centerX, y: y, width: 150, text: '热销商品',
     backgroundColor: '#ef4444'
   })
   layer.addElement(ribbon)
@@ -183,7 +184,7 @@ async function main() {
 
   // Divider 分割线
   const divider = new Divider({
-    x: padding, y: y, width: 300,
+    x: centerX, y: y, width: 300,
     color: '#e2e8f0', thickness: 2
   })
   layer.addElement(divider)
@@ -191,14 +192,14 @@ async function main() {
 
   // Notification 通知
   const notification = new Notification({
-    x: padding, y: y, width: 250, title: '提示', message: '操作成功'
+    x: centerX, y: y, width: 250, title: '提示', message: '操作成功'
   })
   layer.addElement(notification)
   y += 80
 
   // Timeline 时间线
   const timeline = new Timeline({
-    x: padding, y: y, width: 300, height: 100,
+    x: centerX, y: y, width: 300, height: 100,
     items: ['步骤1', '步骤2', '步骤3']
   })
   layer.addElement(timeline)
@@ -206,7 +207,7 @@ async function main() {
 
   // Table 表格
   const table = new Table({
-    x: padding, y: y, width: 300,
+    x: centerX, y: y, width: 300,
     headers: ['姓名', '年龄'],
     rows: [['张三', '25'], ['李四', '30']]
   })
@@ -215,7 +216,7 @@ async function main() {
 
   // Feature 特性
   const feature = new Feature({
-    x: padding, y: y, width: 200,
+    x: centerX, y: y, width: 200,
     title: '快速', description: '高性能处理',
     icon: '⚡', iconColor: '#f59e0b'
   })
@@ -224,7 +225,7 @@ async function main() {
 
   // Stepper 步骤器
   const stepper = new Stepper({
-    x: padding, y: y, width: 300,
+    x: centerX, y: y, width: 300,
     steps: ['下单', '支付', '发货', '完成'], currentStep: 1
   })
   layer.addElement(stepper)
@@ -232,7 +233,7 @@ async function main() {
 
   // Bubble 气泡
   const bubble = new Bubble({
-    x: padding, y: y, width: 200, height: 60,
+    x: centerX, y: y, width: 200, height: 60,
     text: '你好，这是气泡提示', backgroundColor: '#1e293b', textColor: '#ffffff'
   })
   layer.addElement(bubble)
@@ -240,7 +241,7 @@ async function main() {
 
   // ImageFrame 图片框架
   const imageFrame = new ImageFrame({
-    x: padding, y: y, width: 120, height: 120,
+    x: centerX, y: y, width: 120, height: 120,
     radius: 12, borderColor: '#3b82f6', borderWidth: 3
   })
   layer.addElement(imageFrame)
@@ -248,7 +249,7 @@ async function main() {
 
   // Grid 网格
   const grid = new Grid({
-    x: padding, y: y, columns: 3, rows: 2,
+    x: centerX, y: y, columns: 3, rows: 2,
     columnWidth: 60, rowHeight: 60, gap: 10
   })
   layer.addElement(grid)
@@ -256,14 +257,14 @@ async function main() {
 
   // Columns 列布局
   const columns = new Columns({
-    x: padding, y: y, widths: [100, 100], gap: 10
+    x: centerX, y: y, widths: [100, 100], gap: 10
   })
   layer.addElement(columns)
   y += 100
 
   // HighlightText 高亮文字
   const highlightText = new HighlightText({
-    x: padding, y: y, width: 300,
+    x: centerX, y: y, width: 300,
     text: '重要文本', highlightColor: '#fef08a', textColor: '#1e293b'
   })
   layer.addElement(highlightText)
@@ -271,7 +272,7 @@ async function main() {
 
   // TagCloud 标签云
   const tagCloud = new TagCloud({
-    x: padding, y: y, width: 300,
+    x: centerX, y: y, width: 300,
     tags: ['JavaScript', 'Python', 'React', 'Vue', 'Node.js']
   })
   layer.addElement(tagCloud)
@@ -279,7 +280,7 @@ async function main() {
 
   // Watermark 水印
   const watermark = new Watermark({
-    x: padding, y: y, width: 300, height: 100,
+    x: centerX, y: y, width: 300, height: 100,
     text: '机密', color: 'rgba(0,0,0,0.1)'
   })
   layer.addElement(watermark)
@@ -287,7 +288,7 @@ async function main() {
 
   // Frame 框架
   const frame = new Frame({
-    x: padding, y: y, width: 200, height: 100,
+    x: centerX, y: y, width: 200, height: 100,
     borderColor: '#3b82f6', borderWidth: 2, radius: 8
   })
   layer.addElement(frame)
@@ -295,7 +296,7 @@ async function main() {
 
   // Card 卡片
   const card = new Card({
-    x: padding, y: y, width: 300, height: 150,
+    x: centerX, y: y, width: 300, height: 150,
     title: '卡片标题', description: '这是卡片描述内容',
     backgroundColor: '#ffffff', borderRadius: 12
   })

@@ -87,24 +87,22 @@ class Badge extends Component {
     const badgeWidth = textWidth + absPadding * 2
     const badgeHeight = textHeight + absPadding * 2
 
-    // 背景位置 - 居中定位
+    // 背景位置 - 使用 anchor: [0.5, 0.5] 让系统自动居中
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = badgeWidth
       this._bgElement.height = badgeHeight
       this._bgElement.borderRadius = absRadius
-      this._bgElement.x = absX + badgeWidth / 2
-      this._bgElement.y = absY + badgeHeight / 2
+      this._bgElement.x = absX
+      this._bgElement.y = absY
       this._bgElement.anchor = [0.5, 0.5]
       this._bgElement.render(paper, context)
     }
 
-    // 文字位置 - 垂直居中
-    // baseline Y = 中心点 + (ascent - descent) / 2
-    // ascent = textAscent, descent = textHeight - textAscent
-    const textDescent = textHeight - textAscent
+    // 文字位置 - 直接使用 absX, absY 作为中心点
+    // TextElement 有自己的 anchor 处理，会自动居中
     if (this._textElement && this._textElement._paperItem) {
-      this._textElement.x = absX + badgeWidth / 2
-      this._textElement.y = absY + badgeHeight / 2 + (textAscent - textDescent) / 2
+      this._textElement.x = absX
+      this._textElement.y = absY
       this._textElement.fontSize = absFontSize
       this._textElement.render(paper, context)
       this._textElement._paperItem.bringToFront()

@@ -19,10 +19,10 @@ class RectElement extends BaseElement {
   }
 
   _createPaperItem(paper) {
-    // Use numeric placeholder values since render() will calculate proper values
+    // 使用配置的值作为占位符，render() 会重新计算正确的值
     const rect = new paper.Path.Rectangle({
       point: [0, 0],
-      size: [100, 100],
+      size: [this.width || 100, this.height || 100],
       radius: typeof this.borderRadius === 'string' ? 0 : this.borderRadius
     })
 
@@ -58,13 +58,24 @@ class RectElement extends BaseElement {
     const posX = x - width * anchorX
     const posY = y - height * anchorY
 
+    // 保存旧 item 引用以便彻底移除
+    const oldItem = this._paperItem
+
     // 重建矩形以确保路径数据正确
-    this._paperItem.remove()
     this._paperItem = new paper.Path.Rectangle({
       point: [posX, posY],
       size: [width, height],
       radius: typeof this.borderRadius === 'string' ? 0 : toPixels(this.borderRadius, context2d, 'width')
     })
+    // 显式添加到活动图层
+    if (paper.project && paper.project.activeLayer) {
+      paper.project.activeLayer.addChild(this._paperItem)
+    }
+
+    // 彻底移除旧 item（remove() 只断开引用，需要从父级移除）
+    if (oldItem && oldItem.parent) {
+      oldItem.remove()
+    }
 
     if (this.fillColor) {
       this._paperItem.fillColor = new paper.Color(this.fillColor)

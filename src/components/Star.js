@@ -22,17 +22,26 @@ class Star extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     // 不需要初始化子元素
+    this._initialized = true
   }
 
   render(paper, context = {}) {
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
     const absY = toPixels(this.y, context2d, 'y')
     const absOuterRadius = toPixels(this.outerRadius, context2d, 'width')
     const absInnerRadius = toPixels(this.innerRadius, context2d, 'width')
+
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const centerX = absX - absOuterRadius * anchorX
+    const centerY = absY - absOuterRadius * anchorY
 
     if (this._paperItem) {
       this._paperItem.remove()
@@ -45,8 +54,8 @@ class Star extends Component {
     for (let i = 0; i < this.points * 2; i++) {
       const radius = i % 2 === 0 ? absOuterRadius : absInnerRadius
       const angle = i * angleStep - Math.PI / 2 + (this.rotation * Math.PI / 180)
-      const px = absX + absOuterRadius + radius * Math.cos(angle)
-      const py = absY + absOuterRadius + radius * Math.sin(angle)
+      const px = centerX + absOuterRadius + radius * Math.cos(angle)
+      const py = centerY + absOuterRadius + radius * Math.sin(angle)
 
       if (i === 0) {
         path.moveTo(px, py)

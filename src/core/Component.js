@@ -66,20 +66,6 @@ class Component {
   }
 
   initialize(paper) {
-    // 创建背景 - 使用 zIndex - 9999 确保在底层
-    if (this.backgroundColor) {
-      const { RectElement } = require('../elements/RectElement')
-      this._bgElement = new RectElement({
-        x: 0,
-        y: 0,
-        width: this.width,
-        height: this.height,
-        fillColor: this.backgroundColor,
-        zIndex: this.zIndex - 9999
-      })
-      this._bgElement.initialize(paper)
-    }
-
     // 初始化子元素 - 设置正确的 zIndex
     for (const element of this.elements) {
       if (element.initialize) {
@@ -92,6 +78,7 @@ class Component {
         element.initialize(paper)
       }
     }
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -106,14 +93,6 @@ class Component {
     // 计算组件的绝对尺寸
     const absWidth = toPixels(this.width, context2d, 'width')
     const absHeight = toPixels(this.height, context2d, 'height')
-
-    // 渲染背景 - zIndex 最低 (zIndex - 9999)
-    if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement._paperItem.bounds.x = absX
-      this._bgElement._paperItem.bounds.y = absY
-      this._bgElement.render(paper, context)
-      this._bgElement._paperItem.zIndex = this.zIndex - 9999
-    }
 
     // 渲染子元素 - 按 zIndex 从低到高排序
     const sortedElements = [...this.elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
@@ -161,9 +140,6 @@ class Component {
   }
 
   destroy() {
-    if (this._bgElement) {
-      this._bgElement.destroy()
-    }
     for (const element of this.elements) {
       if (element.destroy) {
         element.destroy()

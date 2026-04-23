@@ -20,8 +20,10 @@ class Rating extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._stars = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -36,6 +38,10 @@ class Rating extends Component {
     const absSize = toPixels(this.size, context2d, 'width')
     const absGap = toPixels(this.gap, context2d, 'width')
 
+    // 计算总宽度并居中
+    const totalWidth = this.max * absSize + (this.max - 1) * absGap
+    const startX = absX - totalWidth / 2
+
     // 清理旧星星
     for (const star of this._stars) {
       if (star._paperItem) {
@@ -45,7 +51,7 @@ class Rating extends Component {
     this._stars = []
 
     for (let i = 0; i < this.max; i++) {
-      const starX = absX + i * (absSize + absGap)
+      const starX = startX + i * (absSize + absGap)
       const filled = i < Math.floor(this.value)
       const partial = !filled && i < this.value
 

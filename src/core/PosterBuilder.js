@@ -199,6 +199,11 @@ class PosterBuilder {
    * @param {string} format - 'png' | 'jpg'
    */
   toBuffer(format = 'png') {
+    // 自动初始化（如果还没有初始化）
+    if (!this.project) {
+      this.initialize()
+    }
+
     if (!this.canvas) {
       throw new Error('Canvas not initialized')
     }

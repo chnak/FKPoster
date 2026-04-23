@@ -27,8 +27,10 @@ class StatCard extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -52,9 +54,15 @@ class StatCard extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
+
     // 背景
     const bg = new paper.Path.Rectangle({
-      point: [absX, absY],
+      point: [posX, posY],
       size: [absWidth, absHeight],
       radius: absRadius,
     })
@@ -80,14 +88,14 @@ class StatCard extends Component {
     const totalContentHeight = iconHeight + labelHeight + valueHeight + changeHeight + gaps
 
     // 让内容在卡片内垂直居中
-    const contentTopY = absY + (absHeight - totalContentHeight) / 2
+    const contentTopY = posY + (absHeight - totalContentHeight) / 2
     let currentY = contentTopY
 
     // 图标 - 在左上角，使用字体回退链
     if (this.icon) {
       const iconFontFamily = getFontFallbackChain(null, this.icon)
       const iconText = new paper.PointText({
-        point: [absX + paddingX, currentY + iconSize],
+        point: [posX + paddingX, currentY + iconSize],
         content: this.icon,
         fontSize: iconSize,
         fontFamily: iconFontFamily,
@@ -100,7 +108,7 @@ class StatCard extends Component {
 
     // 标签
     const labelText = new paper.PointText({
-      point: [absX + paddingX, currentY + labelSize],
+      point: [posX + paddingX, currentY + labelSize],
       content: this.label,
       fontSize: labelSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
@@ -112,10 +120,10 @@ class StatCard extends Component {
 
     // 数值
     const valueText = new paper.PointText({
-      point: [absX + paddingX, currentY + valueSize],
+      point: [posX + paddingX, currentY + valueSize],
       content: this.value,
       fontSize: valueSize,
-      fontFamily: this.fontFamily || 'Microsoft Ya Hei',
+      fontFamily: this.fontFamily || 'Microsoft YaHei',
       fillColor: new paper.Color('#ffffff'),
       fontWeight: 'bold',
     })
@@ -128,7 +136,7 @@ class StatCard extends Component {
       const changeColor = this.positive ? '#22c55e' : '#ef4444'
       const changeIcon = this.positive ? '↑' : '↓'
       const changeText = new paper.PointText({
-        point: [absX + paddingX, currentY + changeSize],
+        point: [posX + paddingX, currentY + changeSize],
         content: `${changeIcon} ${this.change}`,
         fontSize: changeSize,
         fontFamily: this.fontFamily || 'Microsoft YaHei',

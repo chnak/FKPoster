@@ -22,13 +22,15 @@ class Barcode extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
-    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -38,6 +40,12 @@ class Barcode extends Component {
     const absWidth = toPixels(this.width, context2d, 'width')
     const absHeight = toPixels(this.height, context2d, 'height')
     const absFontSize = toFontSizePixels(this.fontSize, context2d)
+
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const startX = absX - absWidth * anchorX
+    const startY = absY - absHeight * anchorY
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -56,7 +64,7 @@ class Barcode extends Component {
     const barWidth = barUnitWidth * 0.7  // bar占80%宽度，留20%间距
 
     // 绘制条形
-    let currentX = absX + padding
+    let currentX = startX + padding
     for (let i = 0; i < this.content.length; i++) {
       const charCode = this.content.charCodeAt(i)
       // 用3个bar表示一个字符：宽、窄、宽/窄 交替
@@ -71,7 +79,7 @@ class Barcode extends Component {
         const w = isWide ? barUnitWidth : barUnitWidth * 0.5
 
         const bar = new paper.Path.Rectangle({
-          point: [currentX, absY],
+          point: [currentX, startY],
           size: [w, barHeight],
           fillColor: new paper.Color(this.color),
         })
@@ -86,7 +94,7 @@ class Barcode extends Component {
     if (this.showText) {
       const fontFamily = getFontFallbackChain('monospace', this.content)
       const textItem = new paper.PointText({
-        point: [absX + absWidth / 2, absY + barHeight + absFontSize + 2],
+        point: [startX + absWidth / 2, startY + barHeight + absFontSize + 2],
         content: this.content,
         fontSize: absFontSize,
         fontFamily,

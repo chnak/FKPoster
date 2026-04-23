@@ -90,20 +90,24 @@ class TextElement extends BaseElement {
     const fontSize = toFontSizePixels(this.fontSize, context2d)
 
     // 支持 anchor 定位：[0,0] = 左上角基线，[0.5, 0.5] = 中心点
-    const anchorX = this.anchor ? this.anchor[0] : 0
-    const anchorY = this.anchor ? this.anchor[1] : 0
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
 
     // 获取文字尺寸
     const textWidth = this._paperItem.bounds.width
+    const textHeight = this._paperItem.bounds.height
 
-    // Paper.js PointText uses matrix for SVG export, not bounds
-    // So we need to directly set the matrix translation
+    // Paper.js PointText 的 point.y 是基线位置
+    // 文本框顶部在 point.y - ascent，底部在 point.y + descent
+    // 文本框中心 = point.y - ascent + textHeight/2
+    // 要让文本框中心对准 absoluteY: point.y = absoluteY + ascent - textHeight/2
+    // 近似: ascent ≈ fontSize
+    const ascent = fontSize
     const posX = absoluteX - textWidth * anchorX
-    const posY = absoluteY
+    const posY = absoluteY + ascent - textHeight / 2
 
-    // Apply position via matrix translation for correct SVG export
-    this._paperItem.matrix.tx = posX
-    this._paperItem.matrix.ty = posY
+    // 直接设置 point 属性（基线位置）
+    this._paperItem.point = new paper.Point(posX, posY)
 
     this._paperItem.fontSize = fontSize
 
@@ -130,9 +134,11 @@ class TextElement extends BaseElement {
       }
       tempText.remove()
 
-      // 调整位置以适应换行后的宽度
+      // 重新计算换行后的文本高度并调整位置
+      const wrappedTextHeight = wrappedLines.length * fontSize * this.lineHeight
       const newPosX = absoluteX - maxLineWidth * anchorX
-      this._paperItem.matrix.tx = newPosX
+      const newPosY = absoluteY + ascent - wrappedTextHeight / 2
+      this._paperItem.point = new paper.Point(newPosX, newPosY)
     } else {
       this._paperItem.content = this.text
     }

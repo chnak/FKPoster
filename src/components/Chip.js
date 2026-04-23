@@ -8,15 +8,18 @@ const { toPixels, toFontSizePixels } = require('../utils/unit-converter')
 
 class Chip extends Component {
   constructor(config = {}) {
+    // 禁用基类的背景创建，Chip 自己管理背景
     super({
       ...config,
       type: 'chip',
       width: 'auto',
       height: 'auto',
+      backgroundColor: null,  // 禁用基类背景
     })
 
     this.text = config.text || ''
-    this.backgroundColor = config.backgroundColor || '#e0e0e0'
+    // 背景色由 Chip 自己管理，不通过 Component 基类
+    this._chipBgColor = config.backgroundColor !== undefined ? config.backgroundColor : '#e0e0e0'
     this.color = config.color || '#333333'
     this.borderColor = config.borderColor
     this.fontSize = config.fontSize || 12
@@ -27,13 +30,14 @@ class Chip extends Component {
   }
 
   initialize(paper) {
-    // 背景
+    // 背景 - 由 Chip 自己创建在 render 时
+    // 先创建一个空的占位符，render 时会正确创建
     this._bgElement = new RectElement({
       x: 0,
       y: 0,
       width: 1,
       height: 1,
-      fillColor: this.backgroundColor,
+      fillColor: null,  // 临时设为 null
       borderColor: this.borderColor,
       borderWidth: 1,
       borderRadius: 0,
@@ -94,32 +98,31 @@ class Chip extends Component {
     const chipWidth = absPadding * 2 + textWidth + iconWidth + 4
     const chipHeight = absFontSize + absPadding * 2
 
-    // 背景
+    // 背景 - 使用 anchor: [0.5, 0.5] 让系统自动居中
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = chipWidth
       this._bgElement.height = chipHeight
       this._bgElement.borderRadius = absRadius
-      this._bgElement.x = absX + chipWidth / 2
-      this._bgElement.y = absY + chipHeight / 2
+      this._bgElement.x = absX
+      this._bgElement.y = absY
       this._bgElement.anchor = [0.5, 0.5]
+      this._bgElement.fillColor = this._chipBgColor
       this._bgElement.render(paper, context)
     }
 
-    // 图标
+    // 图标 - 直接使用 absX, absY 作为中心点
     if (this._iconElement && this._iconElement._paperItem) {
-      this._iconElement.x = absX + absPadding + absFontSize / 2
-      this._iconElement.y = absY + chipHeight / 2
+      this._iconElement.x = absX
+      this._iconElement.y = absY
       this._iconElement.fontSize = absFontSize + 2
+      this._iconElement.anchor = [0.5, 0.5]
       this._iconElement.render(paper, context)
     }
 
-    // 文字
+    // 文字 - 直接使用 absX, absY 作为中心点
     if (this._textElement && this._textElement._paperItem) {
-      const textX = this.icon
-        ? absX + absPadding + absFontSize + 4 + chipWidth / 2
-        : absX + chipWidth / 2
-      this._textElement.x = textX
-      this._textElement.y = absY + chipHeight / 2
+      this._textElement.x = absX
+      this._textElement.y = absY
       this._textElement.fontSize = absFontSize
       this._textElement.render(paper, context)
       this._textElement._paperItem.bringToFront()

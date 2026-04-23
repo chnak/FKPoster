@@ -67,8 +67,12 @@ class ImageElement extends BaseElement {
     if (this._raster && this._raster.loaded) {
       // 替换旧的占位符
       if (this._paperItem && !(this._paperItem instanceof paper.Raster)) {
-        this._paperItem.remove()
+        const oldItem = this._paperItem
         this._paperItem = this._raster
+        // 彻底移除旧 item
+        if (oldItem && oldItem.parent) {
+          oldItem.remove()
+        }
       }
 
       // 设置尺寸

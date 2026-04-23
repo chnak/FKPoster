@@ -51,13 +51,18 @@ class DividerElement extends BaseElement {
     const posY = y - anchorY
 
     // Update line position and size
-    this._paperItem.remove()
+    const oldItem = this._paperItem
     this._paperItem = new paper.Path.Line({
       from: [posX, posY],
       to: [posX + width, posY],
       strokeColor: new paper.Color(this.color),
       strokeWidth: thickness,
     })
+
+    // 彻底移除旧 item
+    if (oldItem && oldItem.parent) {
+      oldItem.remove()
+    }
 
     if (this.style === 'dashed') {
       this._paperItem.dashArray = [10, 5]

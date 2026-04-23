@@ -69,13 +69,13 @@ class Feature extends Component {
     const absDescSize = toFontSizePixels(this.descSize, context2d)
     const absRadius = toPixels(this.radius, context2d, 'width')
 
-    // 背景
+    // 背景 - 使用 anchor: [0.5, 0.5] 让系统自动居中
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = absWidth
       this._bgElement.height = absHeight
       this._bgElement.borderRadius = absRadius
-      this._bgElement.x = absX + absWidth / 2
-      this._bgElement.y = absY + absHeight / 2
+      this._bgElement.x = absX
+      this._bgElement.y = absY
       this._bgElement.anchor = [0.5, 0.5]
       this._bgElement.render(paper, context)
     }

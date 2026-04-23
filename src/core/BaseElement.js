@@ -1,6 +1,16 @@
 /**
  * 基础元素类
  * 所有元素的基类，定义通用属性和方法
+ *
+ * 锚点 (anchor) 约定:
+ * - [0, 0] = 元素左上角
+ * - [0.5, 0.5] = 元素中心点（所有组件的默认锚点）
+ * - [1, 1] = 元素右下角
+ *
+ * 定位说明:
+ * - x, y 坐标表示锚点所在位置
+ * - 默认 anchor: [0.5, 0.5]，即组件中心点对齐到 (x, y)
+ * - 如需左上角对齐，设置 anchor: [0, 0]
  */
 const { toPixels, calculatePosition } = require('../utils/unit-converter')
 
@@ -18,8 +28,8 @@ class BaseElement {
     this.width = config.width
     this.height = config.height
 
-    // 锚点 [0-1, 0-1]，默认左上角 [0, 0]
-    this.anchor = config.anchor !== undefined ? config.anchor : [0, 0]
+    // 锚点 [0-1, 0-1]，默认中心点 [0.5, 0.5]
+    this.anchor = config.anchor !== undefined ? config.anchor : [0.5, 0.5]
 
     // 样式
     this.opacity = config.opacity !== undefined ? config.opacity : 1

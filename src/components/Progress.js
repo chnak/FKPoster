@@ -8,9 +8,11 @@ const { toPixels } = require('../utils/unit-converter')
 
 class Progress extends Component {
   constructor(config = {}) {
+    // 禁用基类的背景创建，Progress 自己管理轨道和填充
     super({
       ...config,
       type: 'progress',
+      backgroundColor: null,
     })
 
     this.width = config.width || 300
@@ -25,6 +27,7 @@ class Progress extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     // 轨道背景 - 使用临时尺寸，会在 render 时更新
     this._trackElement = new RectElement({
       x: 0,
@@ -63,6 +66,7 @@ class Progress extends Component {
       })
       this._labelElement.initialize(paper)
     }
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -78,34 +82,33 @@ class Progress extends Component {
     const absHeight = toPixels(this.height, context2d, 'height')
     const absRadius = toPixels(this.radius, context2d, 'width')
 
-    // 轨道
+    // 轨道 - 使用 anchor: [0.5, 0.5] 让系统自动居中
     if (this._trackElement && this._trackElement._paperItem) {
       this._trackElement.width = absWidth
       this._trackElement.height = absHeight
       this._trackElement.borderRadius = absRadius
-      this._trackElement.x = absX + absWidth / 2
-      this._trackElement.y = absY + absHeight / 2
+      this._trackElement.x = absX
+      this._trackElement.y = absY
       this._trackElement.anchor = [0.5, 0.5]
       this._trackElement.render(paper, context)
     }
 
-    // 进度 (value 是百分比 0-100)
+    // 进度 (value 是百分比 0-100) - 使用 anchor: [0, 0.5] 让进度从左开始
     if (this._fillElement && this._fillElement._paperItem) {
       const progressWidth = (this.value / 100) * absWidth
-      const fillX = absX + progressWidth / 2
       this._fillElement.width = progressWidth
       this._fillElement.height = absHeight
       this._fillElement.borderRadius = absRadius
-      this._fillElement.x = fillX
-      this._fillElement.y = absY + absHeight / 2
-      this._fillElement.anchor = [0.5, 0.5]
+      this._fillElement.x = absX - absWidth / 2  // 左边缘对齐轨道左边缘
+      this._fillElement.y = absY
+      this._fillElement.anchor = [0, 0.5]
       this._fillElement.render(paper, context)
     }
 
-    // 标签
+    // 标签 - 直接使用 absX, absY 作为中心点
     if (this._labelElement && this._labelElement._paperItem) {
-      this._labelElement.x = absX + absWidth / 2
-      this._labelElement.y = absY - 10
+      this._labelElement.x = absX
+      this._labelElement.y = absY
       this._labelElement.render(paper, context)
     }
   }

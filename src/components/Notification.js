@@ -118,13 +118,13 @@ class Notification extends Component {
     // 顶部间距小，底部间距大，让内容偏下
     const actualHeight = topPadding + contentHeight + bottomPadding
 
-    // 背景
+    // 背景 - 使用 anchor: [0.5, 0.5] 让系统自动居中
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = absWidth
       this._bgElement.height = actualHeight
       this._bgElement.borderRadius = absRadius
-      this._bgElement.x = absX + absWidth / 2
-      this._bgElement.y = absY + actualHeight / 2
+      this._bgElement.x = absX
+      this._bgElement.y = absY
       this._bgElement.anchor = [0.5, 0.5]
       this._bgElement.render(paper, context)
     }
