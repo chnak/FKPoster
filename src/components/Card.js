@@ -104,6 +104,7 @@ class Card extends Component {
 
   render(paper, context = {}) {
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')

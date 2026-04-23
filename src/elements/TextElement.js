@@ -16,6 +16,7 @@ class TextElement extends BaseElement {
     this.color = config.color || '#000000'
     this.textAlign = config.textAlign || 'left'
     this.maxWidth = config.maxWidth
+    this.lineHeight = config.lineHeight || 1.5
   }
 
   _createPaperItem(paper) {
@@ -32,6 +33,46 @@ class TextElement extends BaseElement {
     })
 
     return text
+  }
+
+  _wrapText(paper, text, maxWidth, fontSize, fontFamily) {
+    if (!maxWidth || maxWidth <= 0 || !text) return [text]
+
+    const fontChain = getFontFallbackChain(fontFamily, text)
+    const tempText = new paper.PointText({
+      point: [0, 0],
+      fontSize: fontSize,
+      fontFamily: fontChain,
+    })
+
+    const lines = []
+    const paragraphs = text.split('\n')
+
+    for (const paragraph of paragraphs) {
+      let currentLine = ''
+      let i = 0
+
+      while (i < paragraph.length) {
+        const char = paragraph[i]
+        const testLine = currentLine + char
+        tempText.content = testLine
+
+        if (tempText.bounds.width > maxWidth && currentLine.length > 0) {
+          lines.push(currentLine)
+          currentLine = char
+        } else {
+          currentLine = testLine
+        }
+        i++
+      }
+
+      if (currentLine.length > 0) {
+        lines.push(currentLine)
+      }
+    }
+
+    tempText.remove()
+    return lines
   }
 
   render(paper, context = {}) {
@@ -70,8 +111,31 @@ class TextElement extends BaseElement {
     const fontChain = getFontFallbackChain(this.fontFamily, this.text)
     this._paperItem.fontFamily = fontChain
 
-    // 更新文本
-    this._paperItem.content = this.text
+    // 换行处理
+    const maxW = this.maxWidth ? toPixels(this.maxWidth, context2d, 'width') : null
+    if (maxW && maxW > 0) {
+      const wrappedLines = this._wrapText(paper, this.text, maxW, fontSize, this.fontFamily)
+      this._paperItem.content = wrappedLines.join('\n')
+
+      // 重新计算宽度（取最长行）
+      let maxLineWidth = 0
+      const tempText = new paper.PointText({
+        point: [0, 0],
+        fontSize: fontSize,
+        fontFamily: fontChain,
+      })
+      for (const line of wrappedLines) {
+        tempText.content = line
+        maxLineWidth = Math.max(maxLineWidth, tempText.bounds.width)
+      }
+      tempText.remove()
+
+      // 调整位置以适应换行后的宽度
+      const newPosX = absoluteX - maxLineWidth * anchorX
+      this._paperItem.matrix.tx = newPosX
+    } else {
+      this._paperItem.content = this.text
+    }
 
     // 应用样式
     this._paperItem.opacity = this.opacity

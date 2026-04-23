@@ -67,6 +67,7 @@ class Bubble extends Component {
   }
 
   render(paper, context = {}) {
+    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }

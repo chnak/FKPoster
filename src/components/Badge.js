@@ -71,14 +71,21 @@ class Badge extends Component {
     const absPadding = toPixels(this.padding, context2d, 'width')
     const absRadius = toPixels(this.radius, context2d, 'width')
 
-    // 计算尺寸
+    // 计算尺寸 - 用 Paper.js 测量实际文字宽度
     const textStr = String(this.text || '')
-    const chineseChars = (textStr.match(/[\u4e00-\u9fa5]/g) || []).length
-    const otherChars = textStr.length - chineseChars
-    const textWidth = chineseChars * absFontSize * 1.0 + otherChars * absFontSize * 0.5
+    const tempText = new paper.PointText({
+      point: [0, 0],
+      fontSize: absFontSize,
+      fontFamily: this.fontFamily || 'Microsoft YaHei',
+      content: textStr,
+    })
+    const textWidth = tempText.bounds.width
+    const textHeight = tempText.bounds.height
+    const textAscent = -tempText.bounds.y  // bounds.y 是负的 ascent 值
+    tempText.remove()
 
     const badgeWidth = textWidth + absPadding * 2
-    const badgeHeight = absFontSize + absPadding * 2
+    const badgeHeight = textHeight + absPadding * 2
 
     // 背景位置 - 居中定位
     if (this._bgElement && this._bgElement._paperItem) {
@@ -91,10 +98,13 @@ class Badge extends Component {
       this._bgElement.render(paper, context)
     }
 
-    // 文字位置 - 居中定位
+    // 文字位置 - 垂直居中
+    // baseline Y = 中心点 + (ascent - descent) / 2
+    // ascent = textAscent, descent = textHeight - textAscent
+    const textDescent = textHeight - textAscent
     if (this._textElement && this._textElement._paperItem) {
       this._textElement.x = absX + badgeWidth / 2
-      this._textElement.y = absY + badgeHeight / 2
+      this._textElement.y = absY + badgeHeight / 2 + (textAscent - textDescent) / 2
       this._textElement.fontSize = absFontSize
       this._textElement.render(paper, context)
       this._textElement._paperItem.bringToFront()

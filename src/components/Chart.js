@@ -29,6 +29,7 @@ class Chart extends Component {
 
   render(paper, context = {}) {
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const absX = this._resolvePercent(this.x, context.width)
     const absY = this._resolvePercent(this.y, context.height)

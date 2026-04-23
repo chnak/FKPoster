@@ -135,7 +135,7 @@ async function main() {
   const progressLabel = new TextElement({
     x: rightX + 20,
     y: padding + 175,
-    text: '库存剩余 25%',
+    text: '库存剩余 75%',
     fontSize: 12,
     color: '#64748b'
   })

@@ -32,7 +32,9 @@ class ImageFrame extends Component {
   }
 
   async _loadImage(paper) {
+    if (!this._clipRect) return
     try {
+      // 使用 paper.Raster 从 URL 加载
       this._raster = new paper.Raster(this.src)
 
       await new Promise((resolve, reject) => {
@@ -40,47 +42,34 @@ class ImageFrame extends Component {
         this._raster.onError = reject
       })
 
-      if (this._raster && this._raster.loaded) {
-        const imgWidth = this._raster.width
-        const imgHeight = this._raster.height
-        const imgRatio = imgWidth / imgHeight
-        const boxRatio = this.width / this.height
+      // 计算 cover/contain 适配
+      const imgWidth = this._raster.width
+      const imgHeight = this._raster.height
 
-        let drawX = 0, drawY = 0, drawW = this.width, drawH = this.height
-
-        if (this.fit === 'cover') {
-          if (imgRatio > boxRatio) {
-            drawH = this.height
-            drawW = this.height * imgRatio
-            drawX = -(drawW - this.width) / 2
-          } else {
-            drawW = this.width
-            drawH = this.width / imgRatio
-            drawY = -(drawH - this.height) / 2
-          }
-        } else if (this.fit === 'contain') {
-          if (imgRatio > boxRatio) {
-            drawW = this.width
-            drawH = this.width / imgRatio
-            drawY = (this.height - drawH) / 2
-          } else {
-            drawH = this.height
-            drawW = this.height * imgRatio
-            drawX = (this.width - drawW) / 2
-          }
-        }
-
-        this._raster.bounds = new paper.Rectangle(drawX, drawY, drawW, drawH)
-        this._raster.clipped = true
-        this._raster.clipMask = this._clipRect
-        this._clipGroup.addChild(this._raster)
+      let scale = 1
+      if (this.fit === 'cover') {
+        scale = Math.max(this.width / imgWidth, this.height / imgHeight)
+      } else if (this.fit === 'contain') {
+        scale = Math.min(this.width / imgWidth, this.height / imgHeight)
       }
+
+      // 设置 raster 位置（在 clipRect 中心）
+      this._raster.position = this._clipRect.bounds.center.clone()
+
+      // 设置 raster 大小
+      this._raster.scale(scale)
+
+      // 使用 Group 的 clipped 属性进行裁剪
+      // clipRect 已经在 _clipGroup 中，设置 clipped = true 后会自动裁剪组内内容
+      this._clipGroup.clipped = true
+      this._clipGroup.addChild(this._raster)
     } catch (err) {
       console.warn('[ImageFrame] Failed to load image:', err.message)
     }
   }
 
-  render(paper, context = {}) {
+  async render(paper, context = {}) {
+    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
@@ -127,13 +116,14 @@ class ImageFrame extends Component {
       }
 
       // 裁剪组
-      const clipGroup = new paper.Group()
+      this._clipGroup = new paper.Group()
       const clipRect = new paper.Path.Rectangle({
         point: [absX, absY],
         size: [absWidth, absHeight],
         radius: absRadius,
       })
-      clipGroup.addChild(clipRect)
+      this._clipRect = clipRect
+      this._clipGroup.addChild(clipRect)
 
       // 叠加色
       if (this.overlayColor && this.overlayOpacity > 0) {
@@ -144,11 +134,16 @@ class ImageFrame extends Component {
         })
         overlayRect.fillColor = new paper.Color(this.overlayColor)
         overlayRect.fillColor.alpha = this.overlayOpacity
-        clipGroup.addChild(overlayRect)
+        this._clipGroup.addChild(overlayRect)
       }
 
-      paper.project.activeLayer.addChild(clipGroup)
-      this._pathElements.push(clipGroup)
+      // 加载并添加图片
+      if (this.src) {
+        await this._loadImage(paper)
+      }
+
+      paper.project.activeLayer.addChild(this._clipGroup)
+      this._pathElements.push(this._clipGroup)
     }
   }
 

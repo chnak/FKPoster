@@ -5,59 +5,22 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 license: MIT
 ---
 
-# Poster Plugin V2 使用指南
+# FKPoster V2 使用指南
 
 ## 简介
 
-Poster Plugin 是一个基于 Paper.js 的海报制作插件，支持图层管理、组件复用、元素布局等功能。
+FKPoster 是一个基于 Paper.js 的海报制作插件，支持图层管理、组件复用、元素布局等功能。
 
 ## 安装
 
 ```bash
-npm install @chnak/poster
+npm install
 ```
-
-## 核心概念
-
-### 层级结构
-
-```
-PosterBuilder (海报构建器)
-  └── Layer (图层)
-        └── Element/Component (元素/组件)
-```
-
-- **PosterBuilder**: 主入口类，负责创建画布、管理图层、导出图片
-- **Layer**: 图层类，类似轨道，管理一组元素，支持 zIndex 排序
-- **Component**: 组件类，可复用的元素组合
-- **BaseElement**: 基础元素类，所有元素的基类
-
-### 元素类型
-
-1. **基础元素 (BaseElement)**
-   - RectElement - 矩形
-   - CircleElement - 圆形
-   - TextElement - 文本
-   - ImageElement - 图片
-   - DividerElement - 分隔线
-
-2. **高级组件 (Component)**
-   - Button - 按钮
-   - Badge - 徽章/标签
-   - Card - 卡片
-   - Avatar - 头像
-   - Progress - 进度条
-   - Rating - 星级评分
-   - Icon - 图标
-   - Quote - 引用块
-   - 等等...
-
----
 
 ## 快速开始
 
 ```javascript
-const { PosterBuilder, TextElement, Button, Badge } = require('@chnak/poster')
+const { PosterBuilder, TextElement, Button, Badge } = require('./src/index')
 
 async function main() {
   // 1. 创建海报构建器
@@ -67,7 +30,8 @@ async function main() {
     backgroundColor: '#ffffff'
   })
 
-  // 2. 创建图层
+  // 2. 初始化并创建图层
+  poster.initialize()
   const layer = poster.createLayer({ name: 'main', zIndex: 0 })
 
   // 3. 添加元素
@@ -89,6 +53,43 @@ main().catch(console.error)
 
 ---
 
+## 核心概念
+
+### 层级结构
+
+```
+PosterBuilder (海报构建器)
+  └── Layer (图层)
+        └── Element/Component (元素/组件)
+```
+
+- **PosterBuilder**: 主入口类，负责创建画布、管理图层、导出图片
+- **Layer**: 图层类，管理一组元素，支持 zIndex 排序
+- **Component**: 组件类，可复用的元素组合
+- **BaseElement**: 基础元素类，所有元素的基类
+
+### 元素类型
+
+1. **基础元素 (BaseElement)**
+   - RectElement - 矩形
+   - CircleElement - 圆形
+   - TextElement - 文本
+   - ImageElement - 图片
+   - DividerElement - 分隔线
+
+2. **高级组件 (Component)**
+   - Button - 按钮
+   - Badge - 徽章/标签（支持自动适配宽高、垂直居中）
+   - Card - 卡片
+   - Avatar - 头像
+   - Progress - 进度条
+   - Rating - 星级评分
+   - Quote - 引用块（支持自动换行）
+   - ImageFrame - 图片框（支持网络/本地图片、cover/contain 裁剪）
+   - 等等...
+
+---
+
 ## PosterBuilder
 
 海报构建器主类
@@ -103,27 +104,13 @@ new PosterBuilder({
 })
 ```
 
-### 预设尺寸
-
-```javascript
-poster.usePreset('poster_square')   // 1080x1080
-poster.usePreset('poster_a4')       // 2480x3508
-poster.usePreset('poster_16_9')     // 1920x1080
-poster.usePreset('poster_9_16')     // 1080x1920
-poster.usePreset('banner_1920x500') // 1920x500
-poster.usePreset('social_instagram') // 1080x1080
-poster.usePreset('social_story')    // 1080x1920
-poster.usePreset('social_facebook') // 1200x630
-```
-
 ### 方法
 
 | 方法 | 说明 | 返回值 |
 |------|------|--------|
+| `initialize()` | 初始化画布 | - |
 | `createLayer(config)` | 创建图层 | `Layer` |
 | `getLayer(id)` | 获取图层 | `Layer` |
-| `createComponent(config)` | 创建组件 | `Component` |
-| `addBackground(color)` | 设置背景色 | `this` |
 | `exportPNG(filename, outputDir)` | 导出 PNG | `string` (文件路径) |
 | `exportSVG(filename, outputDir)` | 导出 SVG | `string` (文件路径) |
 | `toBuffer(format)` | 获取图片 Buffer | `Buffer` |
@@ -136,18 +123,6 @@ poster.usePreset('social_facebook') // 1200x630
 
 图层类，管理一组元素。
 
-### 构造函数参数
-
-```javascript
-new Layer({
-  id: 'layer-1',      // 图层 ID (自动生成)
-  name: 'main',        // 图层名称
-  width: 1080,         // 宽度 (继承自 PosterBuilder)
-  height: 1920,        // 高度 (继承自 PosterBuilder)
-  zIndex: 0            // 层级 (默认: 0)
-})
-```
-
 ### 方法
 
 | 方法 | 说明 | 返回值 |
@@ -156,129 +131,6 @@ new Layer({
 | `removeElement(element)` | 移除元素 | - |
 | `getElement(id)` | 获取元素 | `Element` |
 | `destroy()` | 销毁图层 | - |
-
----
-
-## Component
-
-组件类，可复用的元素组合，支持背景色和子元素管理。
-
-### 构造函数参数
-
-```javascript
-new Component({
-  id: 'component-1',       // 组件 ID (自动生成)
-  name: 'MyComponent',     // 组件名称
-  x: 100,                  // x 坐标 (默认: '50%')
-  y: 100,                  // y 坐标 (默认: '50%')
-  width: 200,              // 宽度 (默认: 200)
-  height: 200,             // 高度 (默认: 200)
-  backgroundColor: '#ffffff',  // 背景色 (可选)
-  opacity: 1,              // 透明度 (默认: 1)
-  visible: true,           // 是否可见 (默认: true)
-  zIndex: 0                // 层级 (默认: 0)
-})
-```
-
-### 方法
-
-| 方法 | 说明 | 返回值 |
-|------|------|--------|
-| `addElement(element)` | 添加子元素 | `this` (链式调用) |
-| `addText(config)` | 添加文本元素 | `TextElement` |
-| `addRect(config)` | 添加矩形元素 | `RectElement` |
-| `addCircle(config)` | 添加圆形元素 | `CircleElement` |
-| `addImage(config)` | 添加图片元素 | `ImageElement` |
-| `getElements()` | 获取所有子元素 | `Array` |
-| `destroy()` | 销毁组件 | - |
-
-### 使用 createComponent 创建可复用组件
-
-```javascript
-const { PosterBuilder, TextElement, Button, RectElement } = require('./src/index')
-
-async function main() {
-  const poster = new PosterBuilder({
-    width: 800,
-    height: 600,
-    backgroundColor: '#f8fafc'
-  })
-
-  // 创建图层
-  const layer = poster.createLayer({ name: 'main', zIndex: 0 })
-
-  // 使用 createComponent 创建组件 (会自动添加到 poster.components)
-  const card = poster.createComponent({
-    x: 100,
-    y: 100,
-    width: 300,
-    height: 200,
-    backgroundColor: '#3b82f6'
-  })
-
-  // 向组件添加子元素 (注意：不是添加到 layer)
-  card.addElement(new TextElement({
-    x: 20, y: 20,
-    text: '组件标题',
-    fontSize: 24,
-    color: '#ffffff',
-    fontWeight: 'bold'
-  }))
-
-  card.addElement(new TextElement({
-    x: 20, y: 60,
-    text: '组件内容文字',
-    fontSize: 16,
-    color: '#ffffff'
-  }))
-
-  card.addElement(new Button({
-    x: 20, y: 120,
-    width: 120,
-    height: 40,
-    text: '按钮',
-    fontSize: 14,
-    backgroundColor: '#ffffff',
-    color: '#3b82f6'
-  }))
-
-  // 注意：不需要 layer.addElement(card)
-  // createComponent 已自动将组件添加到 poster.components
-  // poster.render() 会自动渲染所有组件
-
-  await poster.exportPNG('component-demo', './output')
-  poster.destroy()
-}
-
-main().catch(console.error)
-```
-
-### 重要提示
-
-1. **createComponent 创建的组件会被自动管理**，不需要添加到 layer
-2. **如果同时添加到 layer 和 createComponent**，会导致组件被渲染两次
-3. **组件内的子元素坐标是相对于组件的**，即 (0,0) 是组件的左上角
-4. **组件的背景色是独立的**，不会覆盖子元素
-
----
-
-## BaseElement
-
-基础元素类，所有元素的基类。
-
-### 通用属性
-
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `x` | `number \| string` | `0` | x 坐标 (支持百分比如 `'50%'`) |
-| `y` | `number \| string` | `0` | y 坐标 (支持百分比如 `'50%'`) |
-| `width` | `number` | - | 宽度 |
-| `height` | `number` | - | 高度 |
-| `opacity` | `number` | `1` | 透明度 (0-1) |
-| `rotation` | `number` | `0` | 旋转角度 |
-| `visible` | `boolean` | `true` | 是否可见 |
-| `zIndex` | `number` | `0` | 层级 |
-| `anchor` | `Array` | `[0, 0]` | 锚点 [x, y]，0-1 之间 |
 
 ---
 
@@ -299,6 +151,8 @@ new TextElement({
   color: '#000000',          // 文字颜色 (默认: #000000)
   textAlign: 'left',         // 对齐方式: left/center/right (默认: left)
   maxWidth: 500,             // 最大宽度 (可选)
+  lineHeight: 1.5,           // 行高 (可选)
+  letterSpacing: 0,          // 字间距 (可选)
   opacity: 1,                // 透明度
   rotation: 0,               // 旋转角度
   visible: true,             // 是否可见
@@ -355,7 +209,7 @@ new ImageElement({
   y: 200,                    // y 坐标
   width: 300,                // 宽度
   height: 200,               // 高度
-  src: 'https://example.com/image.png',  // 图片地址
+  src: 'https://example.com/image.png',  // 图片地址 (支持 URL 和 file:// 本地路径)
   opacity: 1,                // 透明度
   rotation: 0,               // 旋转角度
   visible: true,             // 是否可见
@@ -363,17 +217,17 @@ new ImageElement({
 })
 ```
 
-### DividerElement
+### Divider
 
-分隔线元素
+分隔线组件
 
 ```javascript
-new DividerElement({
+new Divider({
   x: 100,                    // x 坐标
   y: 200,                    // y 坐标
   width: 300,                // 宽度
-  thickness: 1,              // 线条粗细 (默认: 1)
-  color: '#e5e7eb',          // 线条颜色
+  color: '#e5e7eb',          // 颜色 (默认: #e5e7eb)
+  thickness: 1,              // 粗细 (默认: 1)
   opacity: 1,                // 透明度
   visible: true,             // 是否可见
   zIndex: 0                  // 层级
@@ -422,7 +276,7 @@ new Button({
 
 ### Badge
 
-徽章/标签组件
+徽章/标签组件，**支持根据文字内容自动适配宽高、垂直居中**。
 
 ```javascript
 new Badge({
@@ -441,6 +295,75 @@ new Badge({
   zIndex: 0                  // 层级
 })
 ```
+
+**特性：**
+- 宽度自动适配文字内容（padding * 2 + 文字宽度）
+- 文字垂直居中于背景
+- 使用 Paper.js bounds 精确测量文字尺寸
+
+### ImageFrame
+
+图片框组件，**支持网络图片、本地图片、cover/contain 裁剪**。
+
+```javascript
+new ImageFrame({
+  x: 100,                    // x 坐标
+  y: 200,                    // y 坐标
+  width: 300,                // 宽度
+  height: 300,              // 高度
+  src: 'https://example.com/image.png',  // 图片地址 (支持 URL 和 file:// 本地路径)
+  borderColor: '#ffffff',    // 边框颜色 (默认: #ffffff)
+  borderWidth: 3,            // 边框宽度 (默认: 3)
+  outerColor: '#1a1a2e',     // 外边框颜色 (默认: #1a1a2e)
+  outerWidth: 6,             // 外边框宽度 (默认: 6)
+  radius: 8,                 // 圆角 (默认: 0)
+  fit: 'cover',              // 适配模式: cover/contain (默认: cover)
+  overlayColor: '#000000',   // 叠加色 (可选)
+  overlayOpacity: 0,         // 叠加透明度 (默认: 0)
+  opacity: 1,                // 透明度
+  visible: true,             // 是否可见
+  zIndex: 0                  // 层级
+})
+```
+
+**特性：**
+- 支持网络图片 URL
+- 支持本地图片 `file://` 协议
+- cover 模式：填充整个区域，可能裁剪部分内容
+- contain 模式：完整显示图片，可能留白
+- 圆角裁剪正确应用
+- 支持叠加色覆盖
+
+### Quote
+
+引用块组件，**支持自动换行**。
+
+```javascript
+new Quote({
+  x: 100,                    // x 坐标
+  y: 200,                    // y 坐标
+  width: 400,                // 宽度 (默认: 400)
+  text: '引用内容文字',       // 引用文字
+  author: '鲁迅',            // 作者 (可选)
+  backgroundColor: '#2d2d3a', // 背景颜色 (默认: #2d2d3a)
+  borderColor: '#00d9ff',    // 左边框颜色 (默认: #00d9ff)
+  borderWidth: 4,            // 左边框宽度 (默认: 4)
+  padding: 20,               // 内边距 (默认: 20)
+  radius: 8,                 // 圆角 (默认: 8)
+  textColor: '#ffffff',      // 文字颜色 (默认: #ffffff)
+  authorColor: '#aaaaaa',    // 作者颜色 (默认: #aaaaaa)
+  fontSize: 18,             // 字体大小 (默认: 18)
+  fontFamily: 'Arial',       // 字体系列
+  opacity: 1,                // 透明度
+  visible: true,             // 是否可见
+  zIndex: 0                  // 层级
+})
+```
+
+**特性：**
+- 自动换行，文本不超出边框
+- 引号位置低于文字 baseline
+- 作者位置在文字下方，距离更远
 
 ### Card
 
@@ -556,33 +479,7 @@ new Icon({
 })
 ```
 
-### Quote
-
-引用块组件，支持自动换行。
-
-```javascript
-new Quote({
-  x: 100,                    // x 坐标
-  y: 200,                    // y 坐标
-  width: 400,                // 宽度 (默认: 400)
-  text: '引用内容文字',       // 引用文字
-  author: '鲁迅',            // 作者 (可选)
-  backgroundColor: '#2d2d3a', // 背景颜色 (默认: #2d2d3a)
-  borderColor: '#00d9ff',    // 左边框颜色 (默认: #00d9ff)
-  borderWidth: 4,            // 左边框宽度 (默认: 4)
-  padding: 20,               // 内边距 (默认: 20)
-  radius: 8,                 // 圆角 (默认: 8)
-  textColor: '#ffffff',      // 文字颜色 (默认: #ffffff)
-  authorColor: '#aaaaaa',    // 作者颜色 (默认: #aaaaaa)
-  fontSize: 18,             // 字体大小 (默认: 18)
-  fontFamily: 'Arial',       // 字体系列
-  opacity: 1,                // 透明度
-  visible: true,             // 是否可见
-  zIndex: 0                  // 层级
-})
-```
-
-### CTA (Call to Action)
+### CTA
 
 行动号召按钮，比 Button 更强调视觉效果。
 
@@ -616,24 +513,6 @@ new Chip({
   color: '#3b82f6',          // 文字颜色
   backgroundColor: '#dbeafe', // 背景颜色
   radius: 12,                // 圆角 (默认: 12)
-  opacity: 1,                // 透明度
-  visible: true,             // 是否可见
-  zIndex: 0                  // 层级
-})
-```
-
-### Divider
-
-分隔线组件，支持水平和垂直方向。
-
-```javascript
-new Divider({
-  x: 100,                    // x 坐标
-  y: 200,                    // y 坐标
-  width: 300,                // 宽度
-  thickness: 1,              // 粗细 (默认: 1)
-  color: '#e5e7eb',          // 颜色 (默认: #e5e7eb)
-  direction: 'horizontal',   // 方向: horizontal/vertical (默认: horizontal)
   opacity: 1,                // 透明度
   visible: true,             // 是否可见
   zIndex: 0                  // 层级
@@ -695,26 +574,6 @@ new Notification({
   type: 'info',              // 类型: info/success/warning/error (默认: info)
   fontSize: 16,              // 字体大小 (默认: 16)
   fontFamily: 'Arial',       // 字体系列
-  opacity: 1,                // 透明度
-  visible: true,             // 是否可见
-  zIndex: 0                  // 层级
-})
-```
-
-### ImageFrame
-
-图片框架组件
-
-```javascript
-new ImageFrame({
-  x: 100,                    // x 坐标
-  y: 200,                    // y 坐标
-  width: 300,                // 宽度
-  height: 300,              // 高度
-  src: 'https://example.com/image.png',  // 图片地址
-  frameColor: '#ffffff',     // 框架颜色 (默认: #ffffff)
-  frameWidth: 10,            // 框架宽度 (默认: 10)
-  radius: 8,                 // 圆角 (默认: 8)
   opacity: 1,                // 透明度
   visible: true,             // 是否可见
   zIndex: 0                  // 层级
@@ -991,7 +850,7 @@ new QRCode({
   x: 100,                    // x 坐标
   y: 200,                    // y 坐标
   size: 200,                 // 二维码尺寸 (默认: 200)
-  value: 'https://example.com',  // 二维码内容
+  value: 'https://example.com',  // 二维码内容 (也支持 content 属性)
   color: '#000000',          // 二维码颜色 (默认: #000000)
   backgroundColor: '#ffffff', // 背景色 (默认: #ffffff)
   errorLevel: 'M',           // 纠错级别: L/M/Q/H (默认: M)
@@ -1165,7 +1024,7 @@ new Star({
 ## 完整示例
 
 ```javascript
-const { PosterBuilder, TextElement, Button, Badge, Card, Avatar, Rating, Progress } = require('@chnak/poster')
+const { PosterBuilder, TextElement, Button, Badge, Card, ImageFrame, Quote } = require('./src/index')
 
 async function main() {
   // 创建海报
@@ -1176,6 +1035,7 @@ async function main() {
   })
 
   // 创建主图层
+  poster.initialize()
   const mainLayer = poster.createLayer({ name: 'main', zIndex: 0 })
 
   // 添加头部
@@ -1187,7 +1047,7 @@ async function main() {
     color: '#1e293b'
   }))
 
-  // 添加徽章
+  // 添加徽章 (自动适配宽高)
   mainLayer.addElement(new Badge({
     x: 40, y: 120,
     text: 'NEW',
@@ -1197,9 +1057,31 @@ async function main() {
     radius: 4
   }))
 
+  // 添加图片框
+  mainLayer.addElement(new ImageFrame({
+    x: 40, y: 180,
+    width: 320, height: 200,
+    src: 'https://picsum.photos/400/300',
+    borderColor: '#3b82f6',
+    borderWidth: 3,
+    radius: 8,
+    fit: 'cover'
+  }))
+
+  // 添加引用块
+  mainLayer.addElement(new Quote({
+    x: 40, y: 420,
+    width: 320,
+    text: '这是一段很长的引用文字，会自动换行显示',
+    author: '鲁迅',
+    backgroundColor: '#2d2d3a',
+    borderColor: '#00d9ff',
+    padding: 20
+  }))
+
   // 添加卡片
   mainLayer.addElement(new Card({
-    x: 40, y: 180,
+    x: 40, y: 600,
     width: 320,
     height: 200,
     title: '产品特点',
@@ -1211,7 +1093,7 @@ async function main() {
 
   // 添加按钮
   mainLayer.addElement(new Button({
-    x: 40, y: 420,
+    x: 40, y: 840,
     width: 320,
     height: 56,
     text: '立即购买',
@@ -1241,4 +1123,7 @@ main().catch(console.error)
 4. **图层顺序**: 通过 zIndex 控制元素的渲染顺序，数值越大越在上层
 5. **销毁清理**: 使用完 poster 后调用 `destroy()` 方法释放资源
 6. **字体回退**: 中文文本会自动使用字体回退链确保渲染效果
-7. **异步加载**: ImageElement 和 Icon 支持异步加载网络图片
+7. **图片加载**: ImageElement 和 ImageFrame 支持网络 URL 和本地 file:// 路径
+8. **Badge 自动适配**: Badge 根据文字内容自动调整宽高，文字垂直居中
+9. **Quote 自动换行**: Quote 组件自动将长文本换行，不超出边框
+10. **ImageFrame 裁剪**: 使用 Group.clipped 实现圆角裁剪

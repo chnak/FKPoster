@@ -13,7 +13,7 @@ class QRCode extends Component {
     })
 
     this.size = config.size || 200
-    this.content = config.content || ''
+    this.content = config.content || config.value || ''
     this.color = config.color || '#000000'
     this.backgroundColor = config.backgroundColor || '#ffffff'
     this.logo = config.logo
@@ -57,6 +57,7 @@ class QRCode extends Component {
   }
 
   async render(paper, context = {}) {
+    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
 
     const absX = this._resolvePercent(this.x, context.width)
