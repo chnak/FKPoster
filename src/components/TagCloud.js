@@ -20,8 +20,10 @@ class TagCloud extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -38,6 +40,12 @@ class TagCloud extends Component {
     const absGap = toPixels(this.gap, context2d, 'width')
     const absMaxWidth = toPixels(this.maxWidth, context2d, 'width')
 
+    // 支持 anchor 定位 - 使用 [0.5, 0.5] 默认中心定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absMaxWidth * anchorX
+    const posY = absY
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -46,8 +54,8 @@ class TagCloud extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
-    let currentX = absX
-    let currentY = absY
+    let currentX = posX
+    let currentY = posY
     let rowHeight = 0
 
     for (const tag of this.tags) {

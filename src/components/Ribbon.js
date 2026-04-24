@@ -23,8 +23,10 @@ class Ribbon extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   _darkenColor(paper, hexColor, factor = 0.7) {
@@ -37,8 +39,8 @@ class Ribbon extends Component {
   }
 
   render(paper, context = {}) {
-    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -49,6 +51,12 @@ class Ribbon extends Component {
     const absFontSize = toFontSizePixels(this.fontSize, context2d)
     const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const startX = absX - absWidth * anchorX
+    const startY = absY - 50 * anchorY  // ribbonHeight = 50
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -58,11 +66,11 @@ class Ribbon extends Component {
     if (!paper.project || !paper.project.activeLayer) return
 
     if (this.style === 'diagonal') {
-      this._renderDiagonal(paper, absX, absY, absWidth, absFontSize, absBorderWidth)
+      this._renderDiagonal(paper, startX, startY, absWidth, absFontSize, absBorderWidth)
     } else if (this.style === 'corner') {
-      this._renderCorner(paper, absX, absY, absWidth, absFontSize, absBorderWidth)
+      this._renderCorner(paper, startX, startY, absWidth, absFontSize, absBorderWidth)
     } else {
-      this._renderFold(paper, absX, absY, absWidth, absFontSize, absBorderWidth)
+      this._renderFold(paper, startX, startY, absWidth, absFontSize, absBorderWidth)
     }
   }
 

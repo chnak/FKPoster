@@ -21,8 +21,10 @@ class Frame extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -40,6 +42,12 @@ class Frame extends Component {
     const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
     const absRadius = toPixels(this.radius, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -48,8 +56,8 @@ class Frame extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
-    const effectiveX = absX + absPadding
-    const effectiveY = absY + absPadding
+    const effectiveX = posX + absPadding
+    const effectiveY = posY + absPadding
     const effectiveWidth = absWidth - absPadding * 2
     const effectiveHeight = absHeight - absPadding * 2
 

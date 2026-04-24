@@ -34,6 +34,9 @@ class Button extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
+    this._initialized = true
+
     // 创建占位的背景
     this._bgElement = new RectElement({
       x: 0,
@@ -79,6 +82,7 @@ class Button extends Component {
 
   render(paper, context = {}) {
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
 
@@ -108,7 +112,11 @@ class Button extends Component {
       : (textWidth + absPadding * 2 + iconWidth)
     const finalHeight = absHeight
 
-    // 更新背景 - 使用 anchor: [0.5, 0.5] 让系统自动居中
+    // 支持 anchor 定位 - Button 的 (x,y) 是中心点
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+
+    // 更新背景 - 让 RectElement 用 anchor 自动居中
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = finalWidth
       this._bgElement.height = finalHeight
@@ -137,7 +145,7 @@ class Button extends Component {
       this._iconElement.y = absY
       this._iconElement.width = iconSize
       this._iconElement.height = iconSize
-      this._iconElement.anchor = [0.5, 0.5]
+      this._iconElement.anchor = [anchorX, anchorY]
       this._iconElement.render(paper, context)
       // 确保图标在最上层
       this._iconElement._paperItem.bringToFront()

@@ -19,11 +19,14 @@ class Divider extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     // 不创建子元素，直接在 render 中创建
+    this._initialized = true
   }
 
   render(paper, context = {}) {
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -33,6 +36,10 @@ class Divider extends Component {
     const absWidth = toPixels(this.width, context2d, 'width')
     const absThickness = toPixels(this.thickness, context2d, 'height')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const startX = absX - absWidth * anchorX
+
     // 移除旧的线段
     if (this._paperItem) {
       this._paperItem.remove()
@@ -40,8 +47,8 @@ class Divider extends Component {
 
     // 创建新线段
     const line = new paper.Path.Line({
-      from: [absX, absY],
-      to: [absX + absWidth, absY],
+      from: [startX, absY],
+      to: [startX + absWidth, absY],
       strokeColor: new paper.Color(this.color),
       strokeWidth: absThickness,
     })

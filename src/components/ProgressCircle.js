@@ -62,8 +62,9 @@ class ProgressCircle extends Component {
     // 支持 anchor 定位
     const anchorX = this.anchor ? this.anchor[0] : 0.5
     const anchorY = this.anchor ? this.anchor[1] : 0.5
-    const centerX = absX - absRadius * anchorX
-    const centerY = absY - absRadius * anchorY
+    // 直接使用 absX/absY 作为圆心
+    const centerX = absX
+    const centerY = absY
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -74,7 +75,7 @@ class ProgressCircle extends Component {
     // 背景圆（填充整个区域）
     if (this.backgroundColor) {
       const bgCircle = new paper.Path.Circle({
-        center: [centerX + absRadius, centerY + absRadius],
+        center: [centerX, centerY],
         radius: absRadius + absStrokeWidth / 2,
       })
       bgCircle.fillColor = new paper.Color(this.backgroundColor)
@@ -86,7 +87,7 @@ class ProgressCircle extends Component {
 
     // 轨道（空心圆）
     const trackCircle = new paper.Path.Circle({
-      center: [centerX + absRadius, centerY + absRadius],
+      center: [centerX, centerY],
       radius: absRadius,
     })
     trackCircle.fillColor = null
@@ -108,8 +109,8 @@ class ProgressCircle extends Component {
 
       // 起点
       progressArc.moveTo(
-        centerX + absRadius + absRadius * Math.cos(startRad),
-        centerY + absRadius + absRadius * Math.sin(startRad)
+        centerX + absRadius * Math.cos(startRad),
+        centerY + absRadius * Math.sin(startRad)
       )
 
       // 弧线上的点
@@ -118,8 +119,8 @@ class ProgressCircle extends Component {
       for (let i = 1; i <= segments; i++) {
         const angle = startRad + angleStep * i
         progressArc.lineTo(
-          centerX + absRadius + absRadius * Math.cos(angle),
-          centerY + absRadius + absRadius * Math.sin(angle)
+          centerX + absRadius * Math.cos(angle),
+          centerY + absRadius * Math.sin(angle)
         )
       }
 
@@ -136,8 +137,8 @@ class ProgressCircle extends Component {
     // 标签
     if (this._labelElement && this._labelElement._paperItem) {
       const fontSize = Math.min(Math.max(Math.round(absRadius * 0.35), 12), 48)
-      this._labelElement.x = centerX + absRadius
-      this._labelElement.y = centerY + absRadius
+      this._labelElement.x = centerX
+      this._labelElement.y = centerY
       this._labelElement.fontSize = fontSize
       this._labelElement.render(paper, context)
       this._labelElement._paperItem.bringToFront()

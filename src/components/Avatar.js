@@ -26,6 +26,9 @@ class Avatar extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
+    this._initialized = true
+
     // 圆形背景 - size 会在 render 时转换
     this._bgElement = new CircleElement({
       x: 0,
@@ -64,10 +67,18 @@ class Avatar extends Component {
     const absY = toPixels(this.y, context2d, 'y')
     const absSize = toPixels(this.size, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    // CircleElement 和 TextElement 都使用 anchor [0.5, 0.5]，即圆心/中心在 (x, y)
+    // 所以直接用 absX, absY 作为中心点
+    const centerX = absX
+    const centerY = absY
+
     // 圆形背景
     if (this._bgElement && this._bgElement._paperItem) {
-      this._bgElement.x = absX
-      this._bgElement.y = absY
+      this._bgElement.x = centerX
+      this._bgElement.y = centerY
       this._bgElement.radius = absSize / 2
       this._bgElement.render(paper, context)
     }
@@ -75,8 +86,8 @@ class Avatar extends Component {
     // 首字母 - 与圆形中心对齐
     if (this._textElement && this._textElement._paperItem) {
       const fontSize = absSize * 0.4
-      this._textElement.x = absX
-      this._textElement.y = absY + fontSize / 3
+      this._textElement.x = centerX
+      this._textElement.y = centerY + fontSize / 6  // 垂直居中微调
       this._textElement.fontSize = fontSize
       this._textElement.render(paper, context)
       this._textElement._paperItem.bringToFront()

@@ -31,9 +31,11 @@ class Feature extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._textElements = []
     this._bgElement = null
+    this._initialized = true
 
     // 背景 - 使用临时尺寸
     if (this.backgroundColor) {
@@ -69,14 +71,20 @@ class Feature extends Component {
     const absDescSize = toFontSizePixels(this.descSize, context2d)
     const absRadius = toPixels(this.radius, context2d, 'width')
 
-    // 背景 - 使用 anchor: [0.5, 0.5] 让系统自动居中
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
+
+    // 背景 - 使用 anchor: [0, 0] 对齐到 posX, posY
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = absWidth
       this._bgElement.height = absHeight
       this._bgElement.borderRadius = absRadius
-      this._bgElement.x = absX
-      this._bgElement.y = absY
-      this._bgElement.anchor = [0.5, 0.5]
+      this._bgElement.x = posX
+      this._bgElement.y = posY
+      this._bgElement.anchor = [0, 0]
       this._bgElement.render(paper, context)
     }
 
@@ -87,18 +95,19 @@ class Feature extends Component {
     this._textElements = []
 
     const contentWidth = absWidth - absPadding * 2
-    let currentY = absY + absPadding
+    let currentY = posY + absPadding
 
     // 图标
     if (this.icon) {
       const iconEl = new TextElement({
-        x: absX + absPadding,
+        x: posX + absPadding,
         y: currentY,
         text: this.icon,
         fontSize: absIconSize,
         fontFamily: this.fontFamily,
         color: this.iconColor,
         textAlign: 'left',
+        anchor: [0, 0],
         opacity: this.opacity,
       })
       iconEl.initialize(paper)
@@ -110,13 +119,14 @@ class Feature extends Component {
     // 标题 - 智能换行
     if (this.title) {
       const titleEl = new TextElement({
-        x: absX + absPadding,
+        x: posX + absPadding,
         y: currentY,
         text: this.title,
         fontSize: absTitleSize,
         fontFamily: this.fontFamily,
         color: this.titleColor,
         textAlign: 'left',
+        anchor: [0, 0],
         maxWidth: contentWidth,
         opacity: this.opacity,
       })
@@ -129,13 +139,14 @@ class Feature extends Component {
     // 描述 - 智能换行
     if (this.description) {
       const descEl = new TextElement({
-        x: absX + absPadding,
+        x: posX + absPadding,
         y: currentY,
         text: this.description,
         fontSize: absDescSize,
         fontFamily: this.fontFamily,
         color: this.descColor,
         textAlign: 'left',
+        anchor: [0, 0],
         maxWidth: contentWidth,
         opacity: this.opacity,
       })

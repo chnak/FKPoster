@@ -23,8 +23,10 @@ class Stepper extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -39,6 +41,12 @@ class Stepper extends Component {
     const absWidth = toPixels(this.width, context2d, 'width')
     const absCircleSize = toPixels(this.circleSize, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absCircleSize * anchorY
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -48,13 +56,13 @@ class Stepper extends Component {
     if (!paper.project || !paper.project.activeLayer) return
 
     const stepWidth = this.steps.length > 1 ? absWidth / (this.steps.length - 1) : absWidth
-    const lineY = absY + absCircleSize / 2
+    const lineY = posY + absCircleSize / 2
 
     // 绘制连接线
     if (this.steps.length > 1) {
       const line = new paper.Path.Line({
-        from: [absX + absCircleSize / 2, lineY],
-        to: [absX + absWidth - absCircleSize / 2, lineY],
+        from: [posX + absCircleSize / 2, lineY],
+        to: [posX + absWidth - absCircleSize / 2, lineY],
         strokeColor: new paper.Color(this.inactiveColor),
         strokeWidth: 2,
       })
@@ -64,8 +72,8 @@ class Stepper extends Component {
       // 已完成部分的覆盖线
       if (this.currentStep > 0) {
         const completedLine = new paper.Path.Line({
-          from: [absX + absCircleSize / 2, lineY],
-          to: [absX + absCircleSize / 2 + this.currentStep * stepWidth, lineY],
+          from: [posX + absCircleSize / 2, lineY],
+          to: [posX + absCircleSize / 2 + this.currentStep * stepWidth, lineY],
           strokeColor: new paper.Color(this.completedColor),
           strokeWidth: 2,
         })
@@ -76,7 +84,7 @@ class Stepper extends Component {
 
     // 绘制每个步骤
     for (let i = 0; i < this.steps.length; i++) {
-      const stepX = this.steps.length > 1 ? absX + i * stepWidth : absX
+      const stepX = this.steps.length > 1 ? posX + i * stepWidth : posX
       const step = this.steps[i]
       let color = this.inactiveColor
 
@@ -112,7 +120,7 @@ class Stepper extends Component {
       // 标题
       const titleFontFamily = getFontFallbackChain(this.fontFamily || getDefaultFontFamily(), step.title)
       const titleText = new paper.PointText({
-        point: [stepX + absCircleSize / 2, absY + absCircleSize + 20],
+        point: [stepX + absCircleSize / 2, posY + absCircleSize + 20],
         content: step.title || `Step ${i + 1}`,
         fontSize: 14,
         fontFamily: titleFontFamily,
@@ -126,7 +134,7 @@ class Stepper extends Component {
       if (step.description) {
         const descFontFamily = getFontFallbackChain(this.fontFamily || getDefaultFontFamily(), step.description)
         const descText = new paper.PointText({
-          point: [stepX + absCircleSize / 2, absY + absCircleSize + 38],
+          point: [stepX + absCircleSize / 2, posY + absCircleSize + 38],
           content: step.description,
           fontSize: 11,
           fontFamily: descFontFamily,

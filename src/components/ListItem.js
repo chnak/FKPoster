@@ -28,7 +28,9 @@ class ListItem extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
+    this._initialized = true
 
     // 背景
     this._bgElement = new RectElement({
@@ -121,6 +123,7 @@ class ListItem extends Component {
 
   render(paper, context = {}) {
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -131,53 +134,61 @@ class ListItem extends Component {
     const absHeight = toPixels(this.height, context2d, 'height')
     const absRadius = toPixels(this.radius, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
+
     // 背景 - 使用左上角定位
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = absWidth
       this._bgElement.height = absHeight
       this._bgElement.borderRadius = absRadius
-      this._bgElement.x = absX
-      this._bgElement.y = absY
+      this._bgElement.x = posX
+      this._bgElement.y = posY
+      this._bgElement.anchor = [0, 0]  // 避免 RectElement 再次偏移
       this._bgElement.render(paper, context)
     }
 
     // 图标
     if (this._iconElement && this._iconElement._paperItem) {
-      this._iconElement.x = absX + 15
-      this._iconElement.y = absY + 15
+      this._iconElement.x = posX + 15
+      this._iconElement.y = posY + 15
       this._iconElement.render(paper, context)
       this._iconElement._paperItem.bringToFront()
     }
 
     // 标题
     if (this._titleElement && this._titleElement._paperItem) {
-      this._titleElement.x = absX + 50
-      this._titleElement.y = absY + 12
+      this._titleElement.x = posX + 50
+      this._titleElement.y = posY + 12
       this._titleElement.render(paper, context)
       this._titleElement._paperItem.bringToFront()
     }
 
     // 描述
     if (this._descElement && this._descElement._paperItem) {
-      this._descElement.x = absX + 50
-      this._descElement.y = absY + 34
+      this._descElement.x = posX + 50
+      this._descElement.y = posY + 34
       this._descElement.render(paper, context)
       this._descElement._paperItem.bringToFront()
     }
 
     // 徽章 - 右对齐，使用左上角定位
     if (this._badgeBgElement && this._badgeBgElement._paperItem) {
-      const badgeX = absX + absWidth - this._badgeWidth - 15
-      const badgeY = absY + (absHeight - 24) / 2
+      const badgeX = posX + absWidth - this._badgeWidth - 15
+      const badgeY = posY + (absHeight - 24) / 2
       this._badgeBgElement.x = badgeX
       this._badgeBgElement.y = badgeY
+      this._badgeBgElement.anchor = [0, 0]  // 避免 RectElement 再次偏移
       this._badgeBgElement.render(paper, context)
       this._badgeBgElement._paperItem.bringToFront()
     }
 
     if (this._badgeElement && this._badgeElement._paperItem) {
-      const badgeX = absX + absWidth - this._badgeWidth - 15
-      const badgeY = absY + (absHeight - 24) / 2
+      const badgeX = posX + absWidth - this._badgeWidth - 15
+      const badgeY = posY + (absHeight - 24) / 2
       this._badgeElement.x = badgeX + this._badgeWidth / 2  // 居中
       this._badgeElement.y = badgeY + 12  // 垂直居中 (24/2 + 基线偏移)
       this._badgeElement.render(paper, context)

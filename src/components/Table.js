@@ -27,8 +27,10 @@ class Table extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -56,9 +58,15 @@ class Table extends Component {
 
     const totalHeight = absRowHeight * (this.rows.length + 1)
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - totalHeight * anchorY
+
     // 外边框
     const outerBorder = new paper.Path.Rectangle({
-      point: [absX, absY],
+      point: [posX, posY],
       size: [absWidth, totalHeight]
     })
     outerBorder.fillColor = new paper.Color('transparent')
@@ -69,7 +77,7 @@ class Table extends Component {
 
     // 表头背景
     const headerBgRect = new paper.Path.Rectangle({
-      point: [absX, absY],
+      point: [posX, posY],
       size: [absWidth, absRowHeight]
     })
     headerBgRect.fillColor = new paper.Color(this.headerBg)
@@ -79,15 +87,15 @@ class Table extends Component {
     this._pathElements.push(headerBgRect)
 
     // 表头
-    let currentX = absX
+    let currentX = posX
     this.columns.forEach((col, index) => {
       const colWidth = col.width ? toPixels(col.width, context2d, 'width') : (absWidth / this.columns.length)
 
       // 列分隔线
       if (index > 0) {
         const line = new paper.Path.Line({
-          from: [currentX, absY],
-          to: [currentX, absY + totalHeight]
+          from: [currentX, posY],
+          to: [currentX, posY + totalHeight]
         })
         line.strokeColor = new paper.Color(this.borderColor)
         line.strokeWidth = 0.5
@@ -97,7 +105,7 @@ class Table extends Component {
 
       // 表头文字
       const headerText = new paper.PointText({
-        point: [currentX + colWidth / 2, absY + absRowHeight / 2 + absHeaderFontSize / 3],
+        point: [currentX + colWidth / 2, posY + absRowHeight / 2 + absHeaderFontSize / 3],
         content: col.title || '',
         fontSize: absHeaderFontSize,
         fontFamily: this.fontFamily || 'Microsoft YaHei',
@@ -113,12 +121,12 @@ class Table extends Component {
 
     // 数据行
     this.rows.forEach((row, rowIndex) => {
-      const rowY = absY + absRowHeight * (rowIndex + 1)
+      const rowY = posY + absRowHeight * (rowIndex + 1)
 
       // 斑马纹背景
       if (this.striped && rowIndex % 2 === 1) {
         const stripeBg = new paper.Path.Rectangle({
-          point: [absX, rowY],
+          point: [posX, rowY],
           size: [absWidth, absRowHeight]
         })
         stripeBg.fillColor = new paper.Color(this.stripeColor)
@@ -130,8 +138,8 @@ class Table extends Component {
 
       // 行分隔线
       const rowLine = new paper.Path.Line({
-        from: [absX, rowY],
-        to: [absX + absWidth, rowY]
+        from: [posX, rowY],
+        to: [posX + absWidth, rowY]
       })
       rowLine.strokeColor = new paper.Color(this.borderColor)
       rowLine.strokeWidth = 0.5
@@ -139,7 +147,7 @@ class Table extends Component {
       this._pathElements.push(rowLine)
 
       // 单元格
-      let cellX = absX
+      let cellX = posX
       this.columns.forEach((col, colIndex) => {
         const colWidth = col.width ? toPixels(col.width, context2d, 'width') : (absWidth / this.columns.length)
         const cellValue = row[colIndex] || ''

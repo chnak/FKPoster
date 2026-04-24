@@ -66,8 +66,10 @@ class Quote extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._items = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -99,7 +101,7 @@ class Quote extends Component {
     // 计算内容高度 - 用 Paper.js 实际测量文本 bounds
     // 测量单行文字的实际 ascent + descent
     const tempText = new paper.PointText({
-      point: [absX, absY],
+      point: [0, 0],
       fontSize: absFontSize,
       fontFamily: getFontFallbackChain(this.fontFamily, textLines[0] || ''),
     })
@@ -117,6 +119,12 @@ class Quote extends Component {
     const totalContentHeight = absPadding + textBlockActualHeight + authorGap + authorActualHeight + absPadding
     tempText.remove()
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - totalContentHeight * anchorY
+
     // 销毁旧元素
     for (const item of this._items) {
       item.remove()
@@ -125,7 +133,7 @@ class Quote extends Component {
 
     // 背景
     const bgRect = new paper.Path.Rectangle({
-      point: [absX, absY],
+      point: [posX, posY],
       size: [absWidth, totalContentHeight],
       radius: absRadius,
       fillColor: this.backgroundColor,
@@ -135,7 +143,7 @@ class Quote extends Component {
 
     // 左边框
     const borderRect = new paper.Path.Rectangle({
-      point: [absX, absY],
+      point: [posX, posY],
       size: [absBorderWidth, totalContentHeight],
       fillColor: this.borderColor,
     })
@@ -146,9 +154,9 @@ class Quote extends Component {
     const textBaselineOffset = 16
 
     // 引号 - 稍低于文字 baseline
-    const quoteMarkY = absY + absPadding + textBaselineOffset + 6
+    const quoteMarkY = posY + absPadding + textBaselineOffset + 6
     const quoteMarkText = new paper.PointText({
-      point: [absX + absPadding + 2, quoteMarkY],
+      point: [posX + absPadding + 2, quoteMarkY],
       content: '"',
       fontSize: quoteMarkFontSize,
       fontFamily: getFontFallbackChain(this.fontFamily, '"'),
@@ -159,9 +167,9 @@ class Quote extends Component {
 
     // 引用文字 - baseline at padding + textBaselineOffset
     for (let i = 0; i < textLines.length; i++) {
-      const lineY = absY + absPadding + textBaselineOffset + i * lineHeight
+      const lineY = posY + absPadding + textBaselineOffset + i * lineHeight
       const lineText = new paper.PointText({
-        point: [absX + textStartX, lineY],
+        point: [posX + textStartX, lineY],
         content: textLines[i],
         fontSize: absFontSize,
         fontFamily: getFontFallbackChain(this.fontFamily, textLines[i]),
@@ -173,10 +181,10 @@ class Quote extends Component {
 
     // 作者 - 再离左边远一点
     if (this.author) {
-      const lastLineBaselineY = absY + absPadding + textBaselineOffset + (textLines.length - 1) * lineHeight
+      const lastLineBaselineY = posY + absPadding + textBaselineOffset + (textLines.length - 1) * lineHeight
       const authorY = lastLineBaselineY + authorGap
       const authorText = new paper.PointText({
-        point: [absX + absPadding + 10, authorY],
+        point: [posX + absPadding + 10, authorY],
         content: `— ${this.author}`,
         fontSize: authorFontSize,
         fontFamily: getFontFallbackChain(this.fontFamily, this.author),

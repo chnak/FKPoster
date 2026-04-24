@@ -25,10 +25,12 @@ class FeatureGrid extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._featureComponents = []
     this._bgElement = null
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -46,6 +48,17 @@ class FeatureGrid extends Component {
     const absPadding = toPixels(this.padding, context2d, 'width')
     const absRadius = toPixels(this.radius, context2d, 'width')
 
+    // 计算网格总尺寸
+    const rows = Math.ceil(this.items.length / this.columns)
+    const totalWidth = this.columns * absItemWidth + (this.columns - 1) * absGap + absPadding * 2
+    const totalHeight = rows * absItemHeight + (rows - 1) * absGap + absPadding * 2
+
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - totalWidth * anchorX
+    const posY = absY - totalHeight * anchorY
+
     // 清理旧组件
     for (const comp of this._featureComponents) {
       comp.destroy()
@@ -58,15 +71,10 @@ class FeatureGrid extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
-    // 计算网格总尺寸
-    const rows = Math.ceil(this.items.length / this.columns)
-    const totalWidth = this.columns * absItemWidth + (this.columns - 1) * absGap + absPadding * 2
-    const totalHeight = rows * absItemHeight + (rows - 1) * absGap + absPadding * 2
-
     // 绘制背景
     if (this.backgroundColor) {
       const bg = new paper.Path.Rectangle({
-        point: [absX, absY],
+        point: [posX, posY],
         size: [totalWidth, totalHeight],
         radius: absRadius,
         fillColor: new paper.Color(this.backgroundColor),
@@ -83,8 +91,8 @@ class FeatureGrid extends Component {
       const col = i % this.columns
       const row = Math.floor(i / this.columns)
 
-      const itemX = absX + absPadding + col * (absItemWidth + absGap)
-      const itemY = absY + absPadding + row * (absItemHeight + absGap)
+      const itemX = posX + absPadding + col * (absItemWidth + absGap)
+      const itemY = posY + absPadding + row * (absItemHeight + absGap)
 
       // 创建特性组件
       const feature = new Feature({
@@ -107,6 +115,7 @@ class FeatureGrid extends Component {
         padding: 12,
         fontFamily: this.fontFamily,
         opacity: this.opacity,
+        anchor: [0, 0],  // FeatureGrid 传入的是左上角坐标
       })
 
       feature.initialize(paper)

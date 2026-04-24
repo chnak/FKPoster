@@ -46,7 +46,7 @@ const {
 async function main() {
   const poster = new PosterBuilder({
     width: 800,
-    height: 1200,
+    height: 1600,
     backgroundColor: '#f8fafc'
   })
 
@@ -293,6 +293,50 @@ async function main() {
   })
   layer.addElement(frame)
   y += 120
+
+  // Icon 图标
+  const icon = new Icon({
+    x: centerX, y: y, icon: '★', size: 40, color: '#fbbf24'
+  })
+  layer.addElement(icon)
+  y += 60
+
+  // ListItem 列表项
+  const listItem = new ListItem({
+    x: centerX, y: y, width: 300, height: 60,
+    title: '列表项标题', description: '列表项描述'
+  })
+  layer.addElement(listItem)
+  y += 80
+
+  // QRCode 二维码
+  const qrcode = new QRCode({
+    x: centerX, y: y, width: 80, height: 80,
+    value: 'https://example.com'
+  })
+  layer.addElement(qrcode)
+  y += 100
+
+  // Quote 引用
+  const quote = new Quote({
+    x: centerX, y: y, width: 300,
+    text: '这是引用内容', author: '作者'
+  })
+  layer.addElement(quote)
+  y += 120
+
+  // FeatureGrid 特性网格
+  const featureGrid = new FeatureGrid({
+    x: centerX, y: y, columns: 2, rows: 2,
+    items: [
+      { title: '特性1', icon: '★' },
+      { title: '特性2', icon: '◆' },
+      { title: '特性3', icon: '●' },
+      { title: '特性4', icon: '▲' },
+    ]
+  })
+  layer.addElement(featureGrid)
+  y += 150
 
   // Card 卡片
   const card = new Card({

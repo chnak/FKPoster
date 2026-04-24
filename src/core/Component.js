@@ -23,6 +23,9 @@ class Component {
     this.visible = config.visible !== undefined ? config.visible : true
     this.zIndex = config.zIndex || 0
 
+    // 锚点定位 [0,0] = 左上角，[0.5, 0.5] = 中心点
+    this.anchor = config.anchor !== undefined ? config.anchor : [0.5, 0.5]
+
     // 元素列表
     this.elements = []
 

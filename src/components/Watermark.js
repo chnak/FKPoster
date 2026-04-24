@@ -20,12 +20,15 @@ class Watermark extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._paperItem = null
+    this._initialized = true
   }
 
   render(paper, context = {}) {
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -33,6 +36,12 @@ class Watermark extends Component {
 
     // 转换单位
     const absFontSize = toFontSizePixels(this.fontSize, context2d)
+
+    // 支持 anchor 定位 - 使用 [0.5, 0.5] 默认中心定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absFontSize * anchorX
+    const posY = absY - absFontSize * anchorY
 
     // 清理旧元素
     if (this._paperItem && this._paperItem.parent) {
@@ -43,7 +52,7 @@ class Watermark extends Component {
 
     // Paper.js 中 point 的 y 是文字基线，需要偏移 fontSize/3
     const label = new paper.PointText({
-      point: [absX, absY + absFontSize / 3],
+      point: [posX, posY + absFontSize / 3],
       content: this.text,
       fontSize: absFontSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
@@ -52,7 +61,7 @@ class Watermark extends Component {
     })
 
     if (this.rotation !== 0) {
-      label.rotate(this.rotation, new paper.Point(absX, absY))
+      label.rotate(this.rotation, new paper.Point(posX, posY))
     }
 
     paper.project.activeLayer.addChild(label)

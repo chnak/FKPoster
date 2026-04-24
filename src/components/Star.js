@@ -40,8 +40,9 @@ class Star extends Component {
     // 支持 anchor 定位
     const anchorX = this.anchor ? this.anchor[0] : 0.5
     const anchorY = this.anchor ? this.anchor[1] : 0.5
-    const centerX = absX - absOuterRadius * anchorX
-    const centerY = absY - absOuterRadius * anchorY
+    // 使用 absX/absY 作为中心点
+    const centerX = absX
+    const centerY = absY
 
     if (this._paperItem) {
       this._paperItem.remove()
@@ -54,8 +55,8 @@ class Star extends Component {
     for (let i = 0; i < this.points * 2; i++) {
       const radius = i % 2 === 0 ? absOuterRadius : absInnerRadius
       const angle = i * angleStep - Math.PI / 2 + (this.rotation * Math.PI / 180)
-      const px = centerX + absOuterRadius + radius * Math.cos(angle)
-      const py = centerY + absOuterRadius + radius * Math.sin(angle)
+      const px = centerX + radius * Math.cos(angle)
+      const py = centerY + radius * Math.sin(angle)
 
       if (i === 0) {
         path.moveTo(px, py)

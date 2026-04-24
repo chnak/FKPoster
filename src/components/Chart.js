@@ -3,6 +3,7 @@
  */
 const { Component } = require('../core/Component')
 const { getFontFallbackChain } = require('../fonts')
+const { toPixels } = require('../utils/unit-converter')
 
 class Chart extends Component {
   constructor(config = {}) {
@@ -23,16 +24,25 @@ class Chart extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
     if (!this.visible) return
     if (!this._initialized) this.initialize(paper)
 
-    const absX = this._resolvePercent(this.x, context.width)
-    const absY = this._resolvePercent(this.y, context.height)
+    const context2d = { width: context.width || 1920, height: context.height || 1080 }
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - this.width * anchorX
+    const posY = absY - this.height * anchorY
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -43,13 +53,13 @@ class Chart extends Component {
     if (!paper.project || !paper.project.activeLayer) return
 
     if (this.chartType === 'bar') {
-      this._renderBarChart(paper, absX, absY)
+      this._renderBarChart(paper, posX, posY)
     } else if (this.chartType === 'pie') {
-      this._renderPieChart(paper, absX, absY)
+      this._renderPieChart(paper, posX, posY)
     }
   }
 
-  _renderBarChart(paper, absX, absY) {
+  _renderBarChart(paper, posX, posY) {
     if (this.data.length === 0) return
 
     const chartFont = getFontFallbackChain(this.fontFamily, this.data.map(d => (d.label || '') + String(d.value)).join(''))
@@ -63,8 +73,8 @@ class Chart extends Component {
 
     this.data.forEach((item, index) => {
       const barHeight = (item.value / maxValue) * chartHeight
-      const barX = absX + index * (barWidth + this.barGap)
-      const barY = absY + this.height - labelHeight - valueHeight - barHeight - 5
+      const barX = posX + index * (barWidth + this.barGap)
+      const barY = posY + this.height - labelHeight - valueHeight - barHeight - 5
       const color = item.color || this.barColor
 
       // 绘制柱子
@@ -94,7 +104,7 @@ class Chart extends Component {
       // 绘制标签
       if (this.showLabels) {
         const labelText = new paper.PointText({
-          point: [barX + barWidth / 2, absY + this.height - 8],
+          point: [barX + barWidth / 2, posY + this.height - 8],
           content: item.label || '',
           fontSize: 11,
           fontFamily: chartFont,
@@ -107,12 +117,12 @@ class Chart extends Component {
     })
   }
 
-  _renderPieChart(paper, absX, absY) {
+  _renderPieChart(paper, posX, posY) {
     if (this.data.length === 0) return
 
     const chartFont = getFontFallbackChain(this.fontFamily, this.data.map(d => (d.label || '') + String(d.value)).join(''))
-    const cx = absX + this.width / 2
-    const cy = absY + this.height / 2
+    const cx = posX + this.width / 2
+    const cy = posY + this.height / 2
     const radius = Math.min(this.width, this.height) / 2 - 10
     const total = this.data.reduce((sum, d) => sum + d.value, 0)
     let currentAngle = -90

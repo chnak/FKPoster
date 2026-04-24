@@ -22,9 +22,11 @@ class Icon extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
     this._raster = null
+    this._initialized = true
   }
 
   async _loadImage(paper, icon) {
@@ -50,6 +52,12 @@ class Icon extends Component {
     const absY = toPixels(this.y, context2d, 'y')
     const absSize = toPixels(this.size, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absSize * anchorX
+    const posY = absY - absSize * anchorY
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -66,7 +74,7 @@ class Icon extends Component {
     if (this.backgroundColor || this.borderColor) {
       const absRadius = toPixels(this.radius, context2d, 'width')
       const bg = new paper.Path.Rectangle({
-        point: [absX, absY],
+        point: [posX, posY],
         size: [absSize, absSize],
         radius: absRadius,
       })
@@ -99,7 +107,7 @@ class Icon extends Component {
         if (raster && raster.loaded) {
           const scale = iconSize / Math.max(raster.width, raster.height)
           raster.scale(scale, scale)
-          raster.position = new paper.Point(absX + absSize / 2, absY + absSize / 2)
+          raster.position = new paper.Point(posX + absSize / 2, posY + absSize / 2)
           if (paper.project && paper.project.activeLayer) {
             paper.project.activeLayer.addChild(raster)
           }
@@ -111,7 +119,7 @@ class Icon extends Component {
       const fontSize = Math.min(absSize * 0.6, 64)
       const fontFamily = getFontFallbackChain(null, this.icon)
       const textItem = new paper.PointText({
-        point: [absX + absSize / 2, absY + absSize / 2 + fontSize / 3],
+        point: [posX + absSize / 2, posY + absSize / 2 + fontSize / 3],
         content: this.icon,
         fontSize,
         fontFamily,

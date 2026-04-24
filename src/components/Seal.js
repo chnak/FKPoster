@@ -21,8 +21,10 @@ class Seal extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   _createStarPath(paper, cx, cy, outerR, innerR, points) {
@@ -49,8 +51,8 @@ class Seal extends Component {
   }
 
   render(paper, context = {}) {
-    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -61,6 +63,12 @@ class Seal extends Component {
     const absFontSize = toFontSizePixels(this.fontSize, context2d)
     const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const centerX = absX - absSize * anchorX + absSize / 2
+    const centerY = absY - absSize * anchorY + absSize / 2
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -68,9 +76,6 @@ class Seal extends Component {
     this._pathElements = []
 
     if (!paper.project || !paper.project.activeLayer) return
-
-    const centerX = absX + absSize / 2
-    const centerY = absY + absSize / 2
 
     // 印章边框
     let border
@@ -84,7 +89,7 @@ class Seal extends Component {
       case 'square':
         const squareSize = absSize - absBorderWidth * 2
         border = new paper.Path.Rectangle({
-          point: [absX + absBorderWidth, absY + absBorderWidth],
+          point: [centerX - squareSize / 2, centerY - squareSize / 2],
           size: [squareSize, squareSize],
           radius: 4,
         })

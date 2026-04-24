@@ -23,15 +23,21 @@ class Arrow extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
-    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
+
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
 
     // 清理旧元素
     for (const el of this._pathElements) {
@@ -39,10 +45,16 @@ class Arrow extends Component {
     }
     this._pathElements = []
 
-    const x1 = toPixels(this.x1, context2d, 'x')
-    const y1 = toPixels(this.y1, context2d, 'y')
-    const x2 = toPixels(this.x2, context2d, 'x')
-    const y2 = toPixels(this.y2, context2d, 'y')
+    const absX = toPixels(this.x, context2d, 'x')
+    const absY = toPixels(this.y, context2d, 'y')
+    const absWidth = toPixels(this.width || 100, context2d, 'width')
+    const absHeight = toPixels(this.height || 40, context2d, 'height')
+
+    // 计算箭头起点和终点（基于 x, y 作为中心点）
+    const x1 = absX - absWidth / 2
+    const y1 = absY - absHeight / 2
+    const x2 = absX + absWidth / 2
+    const y2 = absY + absHeight / 2
 
     // 转换单位
     const absStrokeWidth = toPixels(this.strokeWidth, context2d, 'width')

@@ -25,10 +25,11 @@ class ImageFrame extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
     this._raster = null
-    this._initialized = false
+    this._initialized = true
   }
 
   async _loadImage(paper) {
@@ -69,8 +70,8 @@ class ImageFrame extends Component {
   }
 
   async render(paper, context = {}) {
-    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -83,6 +84,12 @@ class ImageFrame extends Component {
     const absOuterWidth = toPixels(this.outerWidth, context2d, 'width')
     const absRadius = toPixels(this.radius, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const frameX = absX - absWidth * anchorX - (this.outerWidth > 0 ? absOuterWidth : 0)
+    const frameY = absY - absHeight * anchorY - (this.outerWidth > 0 ? absOuterWidth : 0)
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -94,7 +101,7 @@ class ImageFrame extends Component {
       // 外边框
       if (this.outerWidth > 0) {
         const outerRect = new paper.Path.Rectangle({
-          point: [absX - absOuterWidth, absY - absOuterWidth],
+          point: [frameX, frameY],
           size: [absWidth + absOuterWidth * 2, absHeight + absOuterWidth * 2],
           radius: absRadius + absOuterWidth,
         })
@@ -106,7 +113,7 @@ class ImageFrame extends Component {
       // 边框
       if (this.borderWidth > 0) {
         const borderRect = new paper.Path.Rectangle({
-          point: [absX, absY],
+          point: [absX - absWidth * anchorX, absY - absHeight * anchorY],
           size: [absWidth, absHeight],
           radius: absRadius,
         })
@@ -118,7 +125,7 @@ class ImageFrame extends Component {
       // 裁剪组
       this._clipGroup = new paper.Group()
       const clipRect = new paper.Path.Rectangle({
-        point: [absX, absY],
+        point: [absX - absWidth * anchorX, absY - absHeight * anchorY],
         size: [absWidth, absHeight],
         radius: absRadius,
       })
@@ -128,7 +135,7 @@ class ImageFrame extends Component {
       // 叠加色
       if (this.overlayColor && this.overlayOpacity > 0) {
         const overlayRect = new paper.Path.Rectangle({
-          point: [absX, absY],
+          point: [absX - absWidth * anchorX, absY - absHeight * anchorY],
           size: [absWidth, absHeight],
           radius: absRadius,
         })

@@ -25,8 +25,10 @@ class Grid extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   getLayout(context = {}) {
@@ -101,6 +103,12 @@ class Grid extends Component {
     const absRadius = toPixels(this.radius, context2d, 'width')
     const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -112,7 +120,7 @@ class Grid extends Component {
     // 背景
     if (this.backgroundColor) {
       const bg = new paper.Path.Rectangle({
-        point: [absX, absY],
+        point: [posX, posY],
         size: [absWidth, absHeight],
         radius: absRadius,
       })
@@ -124,7 +132,7 @@ class Grid extends Component {
     // 边框
     if (this.borderColor && this.borderWidth > 0) {
       const border = new paper.Path.Rectangle({
-        point: [absX, absY],
+        point: [posX, posY],
         size: [absWidth, absHeight],
         radius: absRadius,
       })

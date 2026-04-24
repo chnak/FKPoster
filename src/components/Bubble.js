@@ -28,8 +28,10 @@ class Bubble extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   _wrapText(paper, text, maxWidth, fontSize, fontFamily) {
@@ -67,8 +69,8 @@ class Bubble extends Component {
   }
 
   render(paper, context = {}) {
-    if (!this._initialized) this.initialize(paper)
     if (!this.visible) return
+    if (!this._initialized) this.initialize(paper)
 
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
     const absX = toPixels(this.x, context2d, 'x')
@@ -81,6 +83,12 @@ class Bubble extends Component {
     const absRadius = toPixels(this.radius, context2d, 'width')
     const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const bubbleX = absX - absWidth * anchorX
+    const bubbleY = absY - absHeight * anchorY
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -89,10 +97,10 @@ class Bubble extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
-    // 气泡主体偏移
-    const bubbleX = this.tailDirection === 'left' ? absX + 15 : absX
-    const bubbleY = this.tailDirection === 'top' ? absY + 15 : absY
-    const bubbleWidth = this.tailDirection === 'left' ? absWidth - 15 : absWidth
+    // 气泡主体偏移（保持tail不影响主体位置）
+    const tailOffset = this.tailDirection === 'left' ? 15 : 0
+    const tailOffsetTop = this.tailDirection === 'top' ? 15 : 0
+    const bubbleWidth = absWidth - tailOffset
 
     // 文字
     const padding = 25
@@ -107,7 +115,7 @@ class Bubble extends Component {
 
     // 气泡主体
     const bg = new paper.Path.Rectangle({
-      point: [bubbleX, bubbleY],
+      point: [bubbleX + tailOffset, bubbleY + tailOffsetTop],
       size: [bubbleWidth, actualBubbleHeight],
       radius: absRadius,
     })
@@ -125,31 +133,31 @@ class Bubble extends Component {
 
     switch (this.tailDirection) {
       case 'bottom':
-        tailY = bubbleY + actualBubbleHeight - 5
-        if (this.tailPosition === 'left') tailX = bubbleX + 30
-        else if (this.tailPosition === 'right') tailX = bubbleX + bubbleWidth - 30
-        else tailX = bubbleX + bubbleWidth / 2
+        tailY = bubbleY + tailOffsetTop + actualBubbleHeight - 5
+        if (this.tailPosition === 'left') tailX = bubbleX + tailOffset + 30
+        else if (this.tailPosition === 'right') tailX = bubbleX + tailOffset + bubbleWidth - 30
+        else tailX = bubbleX + tailOffset + bubbleWidth / 2
         tailRotation = 0
         break
       case 'top':
-        tailY = bubbleY + 5
-        if (this.tailPosition === 'left') tailX = bubbleX + 30
-        else if (this.tailPosition === 'right') tailX = bubbleX + bubbleWidth - 30
-        else tailX = bubbleX + bubbleWidth / 2
+        tailY = bubbleY + tailOffsetTop + 5
+        if (this.tailPosition === 'left') tailX = bubbleX + tailOffset + 30
+        else if (this.tailPosition === 'right') tailX = bubbleX + tailOffset + bubbleWidth - 30
+        else tailX = bubbleX + tailOffset + bubbleWidth / 2
         tailRotation = 180
         break
       case 'left':
-        tailX = bubbleX + 5
-        if (this.tailPosition === 'left') tailY = bubbleY + 30
-        else if (this.tailPosition === 'right') tailY = bubbleY + actualBubbleHeight - 30
-        else tailY = bubbleY + actualBubbleHeight / 2
+        tailX = bubbleX + tailOffset + 5
+        if (this.tailPosition === 'left') tailY = bubbleY + tailOffsetTop + 30
+        else if (this.tailPosition === 'right') tailY = bubbleY + tailOffsetTop + actualBubbleHeight - 30
+        else tailY = bubbleY + tailOffsetTop + actualBubbleHeight / 2
         tailRotation = 90
         break
       case 'right':
-        tailX = bubbleX + bubbleWidth - 5
-        if (this.tailPosition === 'left') tailY = bubbleY + 30
-        else if (this.tailPosition === 'right') tailY = bubbleY + actualBubbleHeight - 30
-        else tailY = bubbleY + actualBubbleHeight / 2
+        tailX = bubbleX + tailOffset + bubbleWidth - 5
+        if (this.tailPosition === 'left') tailY = bubbleY + tailOffsetTop + 30
+        else if (this.tailPosition === 'right') tailY = bubbleY + tailOffsetTop + actualBubbleHeight - 30
+        else tailY = bubbleY + tailOffsetTop + actualBubbleHeight / 2
         tailRotation = 270
         break
     }
@@ -175,11 +183,11 @@ class Bubble extends Component {
     for (let i = 0; i < lines.length; i++) {
       let textX
       if (this.tailPosition === 'left') {
-        textX = bubbleX + padding
+        textX = bubbleX + tailOffset + padding
       } else if (this.tailPosition === 'right') {
-        textX = bubbleX + bubbleWidth - padding
+        textX = bubbleX + tailOffset + bubbleWidth - padding
       } else {
-        textX = bubbleX + bubbleWidth / 2
+        textX = bubbleX + tailOffset + bubbleWidth / 2
       }
       const lineText = new paper.PointText({
         point: [textX, textStartY + i * lineHeight],

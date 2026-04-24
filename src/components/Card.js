@@ -79,7 +79,9 @@ class Card extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
+    this._initialized = true
 
     // 背景 - 使用临时尺寸
     this._bgElement = new RectElement({
@@ -119,6 +121,12 @@ class Card extends Component {
     const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
     const absHeight = toPixels(this.height, context2d, 'height')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
+
     // 计算可用宽度
     const maxTextWidth = absWidth - absPadding * 2
 
@@ -153,8 +161,9 @@ class Card extends Component {
       this._bgElement.height = actualHeight
       this._bgElement.borderWidth = absBorderWidth
       this._bgElement.borderRadius = absRadius
-      this._bgElement.x = absX
-      this._bgElement.y = absY
+      this._bgElement.x = posX
+      this._bgElement.y = posY
+      this._bgElement.anchor = [0, 0]  // 避免 RectElement 再次偏移
       this._bgElement.render(paper, context)
     }
 
@@ -167,13 +176,14 @@ class Card extends Component {
     // 标题文本元素
     for (let i = 0; i < titleLines.length; i++) {
       const el = new TextElement({
-        x: absX + absPadding,
-        y: absY + absPadding + absTitleSize + i * titleLineHeight,
+        x: posX + absPadding,
+        y: posY + absPadding + absTitleSize + i * titleLineHeight,
         text: titleLines[i],
         fontSize: absTitleSize,
         fontFamily: this.fontFamily,
         color: this.titleColor,
         textAlign: 'left',
+        anchor: [0, 0],
         opacity: this.opacity,
       })
       el.initialize(paper)
@@ -192,13 +202,14 @@ class Card extends Component {
 
     for (let i = 0; i < subtitleLines.length; i++) {
       const el = new TextElement({
-        x: absX + absPadding,
-        y: absY + subtitleStartY + absSubtitleSize + i * subtitleLineHeight,
+        x: posX + absPadding,
+        y: posY + subtitleStartY + absSubtitleSize + i * subtitleLineHeight,
         text: subtitleLines[i],
         fontSize: absSubtitleSize,
         fontFamily: this.fontFamily,
         color: this.subtitleColor,
         textAlign: 'left',
+        anchor: [0, 0],
         opacity: this.opacity,
       })
       el.initialize(paper)

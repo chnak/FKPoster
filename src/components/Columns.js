@@ -24,8 +24,10 @@ class Columns extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
+    this._initialized = true
   }
 
   getLayout(context = {}) {
@@ -85,6 +87,12 @@ class Columns extends Component {
     const absRadius = toPixels(this.radius, context2d, 'width')
     const absBorderWidth = toPixels(this.borderWidth, context2d, 'width')
 
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -96,7 +104,7 @@ class Columns extends Component {
     // 背景
     if (this.backgroundColor) {
       const bg = new paper.Path.Rectangle({
-        point: [absX, absY],
+        point: [posX, posY],
         size: [absWidth, absHeight],
         radius: absRadius,
       })
@@ -108,7 +116,7 @@ class Columns extends Component {
     // 边框
     if (this.borderColor && this.borderWidth > 0) {
       const border = new paper.Path.Rectangle({
-        point: [absX, absY],
+        point: [posX, posY],
         size: [absWidth, absHeight],
         radius: absRadius,
       })
@@ -124,10 +132,10 @@ class Columns extends Component {
     const columnWidth = (absWidth - totalGap) / this.columnCount
 
     for (let i = 1; i < this.columnCount; i++) {
-      const lineX = absX + columnWidth * i + absGap * (i - 1) + absGap / 2
+      const lineX = posX + columnWidth * i + absGap * (i - 1) + absGap / 2
       const line = new paper.Path.Line({
-        from: [lineX, absY + 20],
-        to: [lineX, absY + absHeight - 20],
+        from: [lineX, posY + 20],
+        to: [lineX, posY + absHeight - 20],
       })
       line.strokeColor = new paper.Color('#e0e0e0')
       line.strokeWidth = 1

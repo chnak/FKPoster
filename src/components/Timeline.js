@@ -31,11 +31,13 @@ class Timeline extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._dotElements = []
     this._dateElements = []
     this._titleElements = []
     this._descElements = []
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -58,9 +60,16 @@ class Timeline extends Component {
 
     if (!this.items || this.items.length === 0) return
 
-    const centerX = absX + 80
-    const centerY = absY + absDotSize / 2
-    const contentX = absX + 120
+    // 支持 anchor 定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = this.items.length * absGap
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
+
+    const centerX = posX + absWidth / 2
+    const centerY = posY + absDotSize / 2
     const endY = centerY + (this.items.length - 1) * absGap
 
     // 主线 - 从第一个点到最后一个点
@@ -80,10 +89,6 @@ class Timeline extends Component {
 
       // 圆点中心 Y 位置
       const dotCenterY = centerY + i * absGap
-      // 文字基线对齐圆心：bounds.y = dotCenterY - fontSize * 0.7
-      // 这样文本基线会落在 dotCenterY 位置
-      const dateBaseline = dotCenterY - absDateSize * 0.7
-      const titleBaseline = dotCenterY - absTitleSize * 0.7
       const isActive = item.active !== false
 
       // 圆点 - 中心对齐
@@ -99,16 +104,21 @@ class Timeline extends Component {
       dot.render(paper, context)
       this._dotElements.push(dot)
 
-      // 日期 - 文本基线对齐
+      // 文字左右偏移量
+      const leftX = centerX - absWidth / 4  // 左侧文字位置
+      const rightX = centerX + absWidth / 4  // 右侧文字位置
+
+      // 日期 - 在左侧，垂直位置在圆点上方
       if (item.date) {
         const dateEl = new TextElement({
-          x: absX + 10,
-          y: dateBaseline,
+          x: leftX,
+          y: dotCenterY - absDateSize * 0.5,  // 日期在圆心上方的基线
           text: item.date,
           fontSize: absDateSize,
           fontFamily: this.fontFamily,
           color: this.dateColor,
           textAlign: 'left',
+          anchor: [0, 0],
           opacity: this.opacity,
         })
         dateEl.initialize(paper)
@@ -116,32 +126,34 @@ class Timeline extends Component {
         this._dateElements.push(dateEl)
       }
 
-      // 标题 - 文本基线对齐
+      // 标题 - 在右侧，垂直位置在圆点处
       const titleEl = new TextElement({
-        x: contentX,
-        y: titleBaseline,
+        x: rightX,
+        y: dotCenterY - absTitleSize * 0.5,  // 标题基线在圆心位置
         text: item.title || `Event ${i + 1}`,
         fontSize: absTitleSize,
         fontFamily: this.fontFamily,
         color: isActive ? this.titleColor : '#666666',
         textAlign: 'left',
+        anchor: [0, 0],
         opacity: this.opacity,
       })
       titleEl.initialize(paper)
       titleEl.render(paper, context)
       this._titleElements.push(titleEl)
 
-      // 描述 - 紧跟在标题下方
+      // 描述 - 在标题下方
       if (item.description) {
-        const descY = titleBaseline + absTitleSize + 8 + absDescSize / 3
+        const descY = dotCenterY + absTitleSize * 0.3 + 4  // 标题下方
         const descEl = new TextElement({
-          x: contentX,
+          x: rightX,
           y: descY,
           text: item.description,
           fontSize: absDescSize,
           fontFamily: this.fontFamily,
           color: this.descColor,
           textAlign: 'left',
+          anchor: [0, 0],
           opacity: this.opacity,
         })
         descEl.initialize(paper)

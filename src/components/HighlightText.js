@@ -22,9 +22,11 @@ class HighlightText extends Component {
   }
 
   initialize(paper) {
+    if (this._initialized) return
     this._paper = paper
     this._pathElements = []
     this._textItem = null
+    this._initialized = true
   }
 
   render(paper, context = {}) {
@@ -40,6 +42,10 @@ class HighlightText extends Component {
     const absHighlightWidth = toPixels(this.highlightWidth, context2d, 'width')
     const absStrokeWidth = toPixels(this.strokeWidth, context2d, 'width')
 
+    // 支持 anchor 定位 - 使用 [0.5, 0.5] 默认中心定位
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+
     // 清理旧元素
     for (const el of this._pathElements) {
       if (el.parent) el.remove()
@@ -48,9 +54,26 @@ class HighlightText extends Component {
 
     if (!paper.project || !paper.project.activeLayer) return
 
+    // 先创建文字在临时位置以测量实际宽度
+    const tempText = new paper.PointText({
+      point: [0, 0],
+      content: this.text,
+      fontSize: absFontSize,
+      fontFamily: this.fontFamily || 'Microsoft YaHei',
+      fillColor: new paper.Color(this.color),
+      justification: 'left',
+    })
+    paper.project.activeLayer.addChild(tempText)
+    const textWidth = tempText.bounds.width
+    tempText.remove()
+
+    // 根据实际宽度和锚点计算正确位置
+    const posX = absX - textWidth * anchorX
+    const posY = absY - absFontSize * anchorY
+
     // 创建文字
     const textItem = new paper.PointText({
-      point: [absX, absY + absFontSize],
+      point: [posX, posY + absFontSize],
       content: this.text,
       fontSize: absFontSize,
       fontFamily: this.fontFamily || 'Microsoft YaHei',
