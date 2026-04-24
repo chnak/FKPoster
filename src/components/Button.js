@@ -20,7 +20,7 @@ class Button extends Component {
     this.text = config.text || '按钮'
     this.fontSize = config.fontSize || 24
     this.fontFamily = config.fontFamily
-    this.color = config.color || '#ffffff'
+    this.color = config.textColor || config.color || '#ffffff'
     this.backgroundColor = config.backgroundColor || '#3b82f6'
     this.borderColor = config.borderColor
     this.borderWidth = config.borderWidth || 0
@@ -133,6 +133,7 @@ class Button extends Component {
       this._textElement.x = absX
       this._textElement.y = absY
       this._textElement.fontSize = absFontSize
+      this._textElement.text = this.text  // 更新文字内容
       this._textElement.render(paper, context)
       // 确保文字在最上层
       this._textElement._paperItem.bringToFront()

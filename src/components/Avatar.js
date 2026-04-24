@@ -17,7 +17,7 @@ class Avatar extends Component {
 
     this.size = config.size || 80
     this.src = config.src
-    this.initials = config.initials
+    this.name = config.name || config.initials  // 支持 name 或 initials
     this.backgroundColor = config.backgroundColor || '#6366f1'
     this.borderColor = config.borderColor
     this.borderWidth = config.borderWidth || 0
@@ -42,11 +42,11 @@ class Avatar extends Component {
     this._bgElement.initialize(paper)
 
     // 首字母 - 垂直居中
-    if (!this.src && this.initials) {
+    if (!this.src && this.name) {
       this._textElement = new TextElement({
         x: 0,
         y: 0, // 临时值，会在 render 时设置
-        text: this.initials.charAt(0).toUpperCase(),
+        text: this.name.charAt(0).toUpperCase(),
         fontSize: 0, // 临时值，会在 render 时设置
         fontFamily: this.fontFamily,
         color: this.color,
@@ -80,6 +80,7 @@ class Avatar extends Component {
       this._bgElement.x = centerX
       this._bgElement.y = centerY
       this._bgElement.radius = absSize / 2
+      this._bgElement.anchor = [0.5, 0.5]  // CircleElement 默认 anchor 是 [0,0]，需要设为 [0.5,0.5] 才能居中
       this._bgElement.render(paper, context)
     }
 
@@ -87,7 +88,7 @@ class Avatar extends Component {
     if (this._textElement && this._textElement._paperItem) {
       const fontSize = absSize * 0.4
       this._textElement.x = centerX
-      this._textElement.y = centerY + fontSize / 6  // 垂直居中微调
+      this._textElement.y = centerY - 1  // 微调
       this._textElement.fontSize = fontSize
       this._textElement.render(paper, context)
       this._textElement._paperItem.bringToFront()

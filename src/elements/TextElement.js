@@ -93,16 +93,47 @@ class TextElement extends BaseElement {
     const anchorX = this.anchor ? this.anchor[0] : 0.5
     const anchorY = this.anchor ? this.anchor[1] : 0.5
 
-    // 获取文字尺寸
-    const textWidth = this._paperItem.bounds.width
-    const textHeight = this._paperItem.bounds.height
+    // 先更新文字内容，才能获取正确的尺寸
+    this._paperItem.content = this.text
 
-    // Paper.js PointText 的 point.y 是基线位置
-    // 文本框顶部在 point.y - ascent，底部在 point.y + descent
-    // 文本框中心 = point.y - ascent + textHeight/2
-    // 要让文本框中心对准 absoluteY: point.y = absoluteY + ascent - textHeight/2
-    // 近似: ascent ≈ fontSize
-    const ascent = fontSize
+    // 换行处理
+    const maxW = this.maxWidth ? toPixels(this.maxWidth, context2d, 'width') : null
+    let finalContent = this.text
+    let maxLineWidth = 0
+    let wrappedTextHeight = 0
+
+    if (maxW && maxW > 0) {
+      const wrappedLines = this._wrapText(paper, this.text, maxW, fontSize, this.fontFamily)
+      finalContent = wrappedLines.join('\n')
+      this._paperItem.content = finalContent
+
+      // 重新计算宽度（取最长行）
+      const tempText = new paper.PointText({
+        point: [0, 0],
+        fontSize: fontSize,
+        fontFamily: getFontFallbackChain(this.fontFamily, finalContent),
+      })
+      for (const line of wrappedLines) {
+        tempText.content = line
+        maxLineWidth = Math.max(maxLineWidth, tempText.bounds.width)
+      }
+      tempText.remove()
+
+      wrappedTextHeight = wrappedLines.length * fontSize * this.lineHeight
+    }
+
+    // 获取文字尺寸（必须在设置 content 之后）
+    const textWidth = maxLineWidth || this._paperItem.bounds.width
+    const textHeight = wrappedTextHeight || this._paperItem.bounds.height
+
+    // Paper.js PointText 的 point.y 是基线
+    // 对于特定字体和字号，ascent 是固定的值（与 fontSize 成正比）
+    // 对于中文字体，ascent ≈ fontSize（因为中文字符是正方形的，ascent 约等于 em height）
+    // bounds.top = point.y - ascent
+    // bounds.center.y = bounds.top + textHeight/2 = point.y - ascent + textHeight/2
+    // 当 anchorY=0.5 时，bounds.center.y = absoluteY
+    // 所以 point.y = absoluteY + ascent - textHeight/2
+    const ascent = fontSize  // 中文字体的 ascent 约等于 fontSize
     const posX = absoluteX - textWidth * anchorX
     const posY = absoluteY + ascent - textHeight / 2
 
@@ -114,34 +145,6 @@ class TextElement extends BaseElement {
     // 更新字体回退链
     const fontChain = getFontFallbackChain(this.fontFamily, this.text)
     this._paperItem.fontFamily = fontChain
-
-    // 换行处理
-    const maxW = this.maxWidth ? toPixels(this.maxWidth, context2d, 'width') : null
-    if (maxW && maxW > 0) {
-      const wrappedLines = this._wrapText(paper, this.text, maxW, fontSize, this.fontFamily)
-      this._paperItem.content = wrappedLines.join('\n')
-
-      // 重新计算宽度（取最长行）
-      let maxLineWidth = 0
-      const tempText = new paper.PointText({
-        point: [0, 0],
-        fontSize: fontSize,
-        fontFamily: fontChain,
-      })
-      for (const line of wrappedLines) {
-        tempText.content = line
-        maxLineWidth = Math.max(maxLineWidth, tempText.bounds.width)
-      }
-      tempText.remove()
-
-      // 重新计算换行后的文本高度并调整位置
-      const wrappedTextHeight = wrappedLines.length * fontSize * this.lineHeight
-      const newPosX = absoluteX - maxLineWidth * anchorX
-      const newPosY = absoluteY + ascent - wrappedTextHeight / 2
-      this._paperItem.point = new paper.Point(newPosX, newPosY)
-    } else {
-      this._paperItem.content = this.text
-    }
 
     // 应用样式
     this._paperItem.opacity = this.opacity

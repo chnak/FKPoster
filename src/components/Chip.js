@@ -124,6 +124,7 @@ class Chip extends Component {
       this._textElement.x = absX
       this._textElement.y = absY
       this._textElement.fontSize = absFontSize
+      this._textElement.text = this.text  // 更新文字内容
       this._textElement.render(paper, context)
       this._textElement._paperItem.bringToFront()
     }
