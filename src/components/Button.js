@@ -65,18 +65,36 @@ class Button extends Component {
     })
     this._textElement.initialize(paper)
 
-    // 创建图标元素（如果是URL图片）
-    if (this.icon && (this.icon.startsWith('http') || this.icon.startsWith('data:'))) {
-      this._iconElement = new ImageElement({
-        x: 0,
-        y: 0,
-        width: 1,
-        height: 1,
-        src: this.icon,
-        anchor: [0.5, 0.5],
-        opacity: this.opacity,
-      })
-      this._iconElement.initialize(paper)
+    // 创建图标元素
+    if (this.icon) {
+      const isUrlIcon = this.icon.startsWith('http') || this.icon.startsWith('data:')
+      if (isUrlIcon) {
+        // URL 图片图标
+        this._iconElement = new ImageElement({
+          x: 0,
+          y: 0,
+          width: 1,
+          height: 1,
+          src: this.icon,
+          anchor: [0.5, 0.5],
+          opacity: this.opacity,
+        })
+        this._iconElement.initialize(paper)
+      } else {
+        // Emoji 图标
+        this._iconTextElement = new TextElement({
+          x: 0,
+          y: 0,
+          text: this.icon,
+          fontSize: this.fontSize,
+          fontFamily: this.fontFamily,
+          color: this.color,
+          textAlign: 'center',
+          anchor: [0.5, 0.5],
+          opacity: this.opacity,
+        })
+        this._iconTextElement.initialize(paper)
+      }
     }
   }
 
@@ -128,14 +146,20 @@ class Button extends Component {
       this._bgElement.render(paper, context)
     }
 
-    // 更新文字位置 - 直接使用 absX, absY 作为中心点
+    // 更新文字位置 - 当有图标时文字要偏移
     if (this._textElement && this._textElement._paperItem) {
-      this._textElement.x = absX
+      let textX = absX
+      if (this.icon) {
+        const iconSpace = absFontSize * 0.8 // 为图标预留空间
+        textX = this.iconPosition === 'left'
+          ? absX + iconSpace / 2
+          : absX - iconSpace / 2
+      }
+      this._textElement.x = textX
       this._textElement.y = absY
       this._textElement.fontSize = absFontSize
       this._textElement.text = this.text  // 更新文字内容
       this._textElement.render(paper, context)
-      // 确保文字在最上层
       this._textElement._paperItem.bringToFront()
     }
 
@@ -148,8 +172,20 @@ class Button extends Component {
       this._iconElement.height = iconSize
       this._iconElement.anchor = [anchorX, anchorY]
       this._iconElement.render(paper, context)
-      // 确保图标在最上层
       this._iconElement._paperItem.bringToFront()
+    }
+
+    // 更新 Emoji 图标位置
+    if (this._iconTextElement && this._iconTextElement._paperItem) {
+      const iconOffset = absFontSize * 0.6 // emoji 大小约为字号的 0.6 倍
+      const iconX = this.iconPosition === 'left'
+        ? absX - finalWidth / 2 + absPadding + iconOffset
+        : absX + finalWidth / 2 - absPadding - iconOffset
+      this._iconTextElement.x = iconX
+      this._iconTextElement.y = absY
+      this._iconTextElement.fontSize = absFontSize
+      this._iconTextElement.render(paper, context)
+      this._iconTextElement._paperItem.bringToFront()
     }
   }
 
@@ -157,6 +193,7 @@ class Button extends Component {
     if (this._bgElement) this._bgElement.destroy()
     if (this._textElement) this._textElement.destroy()
     if (this._iconElement) this._iconElement.destroy()
+    if (this._iconTextElement) this._iconTextElement.destroy()
     super.destroy()
   }
 }
