@@ -51,9 +51,18 @@ class PosterBuilder {
 
     // 加载 paper.js
     this.paper = require('@chnak/paper')
-    this.paper.setup(new this.paper.Size(this.width, this.height))
+    // 让 paper.js 自己创建 canvas（使用 hook 过的 createElement）
+    this.paper.setup()
     this.project = this.paper.project
     this.canvas = this.project.view.element
+
+    // 设置 canvas 和 view 的尺寸
+    this.canvas.width = this.width
+    this.canvas.height = this.height
+    this.canvas._canvas.width = this.width
+    this.canvas._canvas.height = this.height
+    this.project.view._viewSize.width = this.width
+    this.project.view._viewSize.height = this.height
 
     // 创建背景
     if (this.backgroundColor) {

@@ -16,9 +16,6 @@ npm install @chnak/poster
 ## 快速开始
 
 ```javascript
-// 本地开发时使用 src 路径
-const { PosterBuilder, TextElement, RectElement } = require('./src/index')
-
 // npm 安装后使用
 // const { PosterBuilder, TextElement, RectElement } = require('@chnak/poster')
 

@@ -1,6 +1,6 @@
 {
   "name": "@chnak/poster",
-  "version": "1.0.12",
+  "version": "1.0.16",
   "description": "新一代海报制作插件 - 基于 @chnak/paper，支持多层级、组件化、相对坐标",
   "repository": "https://github.com/chnak/FKPoster",
   "main": "src/index.js",
@@ -22,7 +22,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@chnak/paper": "^1.0.9",
+    "@chnak/paper": "^1.0.13",
     "canvas": "npm:@napi-rs/canvas@^0.1.99",
     "fontkit": "^2.0.4",
     "jsdom": "^16.7.0",
