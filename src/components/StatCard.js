@@ -74,22 +74,14 @@ class StatCard extends Component {
 
     // 布局参数
     const paddingX = Math.max(16, absWidth * 0.08)
+    const paddingY = 16
     const iconSize = Math.min(24, absHeight * 0.22)
     const valueSize = Math.min(24, absHeight * 0.2)
     const labelSize = Math.min(11, absHeight * 0.1)
     const changeSize = Math.min(11, absHeight * 0.09)
 
-    // 计算总内容高度
-    const iconHeight = this.icon ? iconSize : 0
-    const labelHeight = labelSize
-    const valueHeight = valueSize
-    const changeHeight = this.change ? changeSize : 0
-    const gaps = (this.icon ? 4 : 0) + (this.change ? 4 : 0) + 4 + 4  // 各元素间间距
-    const totalContentHeight = iconHeight + labelHeight + valueHeight + changeHeight + gaps
-
-    // 让内容在卡片内垂直居中
-    const contentTopY = posY + (absHeight - totalContentHeight) / 2
-    let currentY = contentTopY
+    // 内容从左上角开始
+    let currentY = posY + paddingY
 
     // 图标 - 在左上角，使用字体回退链
     if (this.icon) {
@@ -116,7 +108,7 @@ class StatCard extends Component {
     })
     paper.project.activeLayer.addChild(labelText)
     this._pathElements.push(labelText)
-    currentY += labelHeight + 4  // label下方间距
+    currentY += labelSize + 4  // label下方间距
 
     // 数值
     const valueText = new paper.PointText({
@@ -129,7 +121,7 @@ class StatCard extends Component {
     })
     paper.project.activeLayer.addChild(valueText)
     this._pathElements.push(valueText)
-    currentY += valueHeight + 4  // value下方间距
+    currentY += valueSize + 4  // value下方间距
 
     // 变化值
     if (this.change) {

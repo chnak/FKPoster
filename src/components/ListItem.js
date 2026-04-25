@@ -17,7 +17,7 @@ class ListItem extends Component {
     this.height = config.height || 60
     this.icon = config.icon || '→'
     this.title = config.title
-    this.description = config.description
+    this.description = config.description || config.subtitle
     this.badge = config.badge
     this.badgeColor = config.badgeColor || '#6366f1'
     this.iconColor = config.iconColor || '#6366f1'
@@ -154,23 +154,26 @@ class ListItem extends Component {
     // 图标
     if (this._iconElement && this._iconElement._paperItem) {
       this._iconElement.x = posX + 15
-      this._iconElement.y = posY + 15
+      this._iconElement.y = posY + absHeight / 2
+      this._iconElement.anchor = [0.5, 0.5]
       this._iconElement.render(paper, context)
       this._iconElement._paperItem.bringToFront()
     }
 
-    // 标题
+    // 标题 - 垂直居中
     if (this._titleElement && this._titleElement._paperItem) {
       this._titleElement.x = posX + 50
-      this._titleElement.y = posY + 12
+      this._titleElement.y = posY + (absHeight - 16) / 2  // 垂直居中 (字体16)
+      this._titleElement.anchor = [0, 0]
       this._titleElement.render(paper, context)
       this._titleElement._paperItem.bringToFront()
     }
 
-    // 描述
+    // 描述 - 在标题下方
     if (this._descElement && this._descElement._paperItem) {
       this._descElement.x = posX + 50
-      this._descElement.y = posY + 34
+      this._descElement.y = posY + (absHeight + 16) / 2 + 4  // 标题下方4px
+      this._descElement.anchor = [0, 0]
       this._descElement.render(paper, context)
       this._descElement._paperItem.bringToFront()
     }

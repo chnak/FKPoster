@@ -26,15 +26,15 @@ async function main() {
   // Card
   layer.addElement(new Card({
     x: 200, y: 130, width: 240, height: 150,
-    title: '产品特性',
-    subtitle: '快速、简单、易用，让开发更高效',
+    title: '产品特性特性介绍',
+    subtitle: '快速、简单、易用，让开发更高效，而且功能丰富全面',
     backgroundColor: '#1f4068', radius: 12, anchor: [0.5, 0.5]
   }))
 
   layer.addElement(new Card({
     x: 550, y: 130, width: 240, height: 150,
-    title: '为什么选择我们',
-    subtitle: '专业团队，品质保障，值得信赖',
+    title: '为什么选择我们选择我们的理由',
+    subtitle: '专业团队，品质保障，值得信赖，服务周到贴心',
     backgroundColor: '#e94560', radius: 12, anchor: [0.5, 0.5]
   }))
 
