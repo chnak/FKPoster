@@ -54,7 +54,7 @@ async function main() {
     x: 400, y: 470, value: 5, max: 5, size: 28, gap: 4, anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('03-avatar-rating', './output')
+  await poster.exportPNG('03-avatar-rating', '../output')
   poster.destroy()
   console.log('Avatar and rating test saved to output/03-avatar-rating.png')
 }

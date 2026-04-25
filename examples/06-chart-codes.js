@@ -67,7 +67,7 @@ async function main() {
     showText: true, textColor: '#333333', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('06-chart-codes', './output')
+  await poster.exportPNG('06-chart-codes', '../output')
   poster.destroy()
   console.log('Chart and codes test saved to output/06-chart-codes.png')
 }

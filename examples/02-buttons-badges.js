@@ -79,7 +79,7 @@ async function main() {
     x: 620, y: 450, text: 'Node.js', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('02-buttons-badges', './output')
+  await poster.exportPNG('02-buttons-badges', '../output')
   poster.destroy()
   console.log('Buttons and badges test saved to output/02-buttons-badges.png')
 }

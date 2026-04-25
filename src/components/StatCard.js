@@ -75,15 +75,15 @@ class StatCard extends Component {
     // 布局参数
     const paddingX = Math.max(16, absWidth * 0.08)
     const paddingY = 16
-    const iconSize = Math.min(24, absHeight * 0.22)
-    const valueSize = Math.min(24, absHeight * 0.2)
-    const labelSize = Math.min(11, absHeight * 0.1)
+    const iconSize = Math.min(20, absHeight * 0.18)
+    const valueSize = Math.min(28, absHeight * 0.28)
+    const labelSize = Math.min(12, absHeight * 0.12)
     const changeSize = Math.min(11, absHeight * 0.09)
 
     // 内容从左上角开始
     let currentY = posY + paddingY
 
-    // 图标 - 在左上角，使用字体回退链
+    // 图标 - 左上角
     if (this.icon) {
       const iconFontFamily = getFontFallbackChain(null, this.icon)
       const iconText = new paper.PointText({
@@ -95,8 +95,26 @@ class StatCard extends Component {
       })
       paper.project.activeLayer.addChild(iconText)
       this._pathElements.push(iconText)
-      currentY += iconSize + 4  // icon下方间距
     }
+
+    // 数值 - 在图标旁边或新的一行
+    let valueX = posX + paddingX
+    if (this.icon) {
+      valueX += iconSize + 10  // 图标宽度 + 间距
+    }
+    const valueText = new paper.PointText({
+      point: [valueX, currentY + valueSize],
+      content: this.value,
+      fontSize: valueSize,
+      fontFamily: this.fontFamily || 'Microsoft YaHei',
+      fillColor: new paper.Color('#ffffff'),
+      fontWeight: 'bold',
+    })
+    paper.project.activeLayer.addChild(valueText)
+    this._pathElements.push(valueText)
+
+    // 下一行
+    currentY += valueSize + 8
 
     // 标签
     const labelText = new paper.PointText({
@@ -108,20 +126,7 @@ class StatCard extends Component {
     })
     paper.project.activeLayer.addChild(labelText)
     this._pathElements.push(labelText)
-    currentY += labelSize + 4  // label下方间距
-
-    // 数值
-    const valueText = new paper.PointText({
-      point: [posX + paddingX, currentY + valueSize],
-      content: this.value,
-      fontSize: valueSize,
-      fontFamily: this.fontFamily || 'Microsoft YaHei',
-      fillColor: new paper.Color('#ffffff'),
-      fontWeight: 'bold',
-    })
-    paper.project.activeLayer.addChild(valueText)
-    this._pathElements.push(valueText)
-    currentY += valueSize + 4  // value下方间距
+    currentY += labelSize + 4
 
     // 变化值
     if (this.change) {

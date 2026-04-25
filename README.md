@@ -60,7 +60,7 @@ async function main() {
   }))
 
   // 4. 导出
-  await poster.exportPNG('my-poster', './output')
+  await poster.exportPNG('my-poster', '../output')
   poster.destroy()
 }
 
@@ -88,7 +88,7 @@ poster.usePreset('poster_9_16')     // 1080x1920
 const layer = poster.createLayer({ name: 'main', zIndex: 0 })
 
 // 导出
-await poster.exportPNG('filename', './output')
+await poster.exportPNG('filename', '../output')
 ```
 
 ### Layer - 图层
@@ -251,7 +251,7 @@ async function main() {
     radius: 4
   }))
 
-  await poster.exportPNG('namecard', './output')
+  await poster.exportPNG('namecard', '../output')
   poster.destroy()
 }
 
@@ -306,7 +306,7 @@ async function main() {
     anchor: [0.5, 0]
   }))
 
-  await poster.exportPNG('poster-event', './output')
+  await poster.exportPNG('poster-event', '../output')
   poster.destroy()
 }
 

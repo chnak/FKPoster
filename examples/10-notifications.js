@@ -75,7 +75,7 @@ async function main() {
     anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('10-notifications', './output')
+  await poster.exportPNG('10-notifications', '../output')
   poster.destroy()
   console.log('Notifications test saved to output/10-notifications.png')
 }

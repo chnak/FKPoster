@@ -60,7 +60,7 @@ async function main() {
     tailDirection: 'bottom', tailPosition: 'left'
   }))
 
-  await poster.exportPNG('test-bubble-align', './output')
+  await poster.exportPNG('test-bubble-align', '../output')
   poster.destroy()
 }
 
