@@ -93,6 +93,7 @@ class BaseElement {
     this._paperItem.opacity = this.opacity
     this._paperItem.rotation = this.rotation
     this._paperItem.visible = this.visible
+    this._paperItem.zIndex = this.zIndex || 0
   }
 
   /**
