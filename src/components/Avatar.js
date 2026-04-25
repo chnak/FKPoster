@@ -80,18 +80,19 @@ class Avatar extends Component {
       this._bgElement.x = centerX
       this._bgElement.y = centerY
       this._bgElement.radius = absSize / 2
-      this._bgElement.anchor = [0.5, 0.5]  // CircleElement 默认 anchor 是 [0,0]，需要设为 [0.5,0.5] 才能居中
+      this._bgElement.anchor = [0.5, 0.5]
       this._bgElement.render(paper, context)
     }
 
-    // 首字母 - 与圆形中心对齐
+    // 首字母 - 在圆形背景之上
     if (this._textElement && this._textElement._paperItem) {
       const fontSize = absSize * 0.4
       this._textElement.x = centerX
-      this._textElement.y = centerY - 1  // 微调
+      this._textElement.y = centerY
+	  this._textElement.anchor = [0.5, 0.5]
       this._textElement.fontSize = fontSize
+	  this._textElement._paperItem.bringToFront()
       this._textElement.render(paper, context)
-      this._textElement._paperItem.bringToFront()
     }
   }
 

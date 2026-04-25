@@ -49,10 +49,10 @@ class CircleElement extends BaseElement {
     const y = toPixels(this.y, context2d, 'y')
 
     // 支持 anchor 定位
-    const anchorX = this.anchor ? this.anchor[0] : 0
-    const anchorY = this.anchor ? this.anchor[1] : 0
-    const centerX = x + radius * (1 - 2 * anchorX)
-    const centerY = y + radius * (1 - 2 * anchorY)
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
+    const centerX = x - radius * (2 * anchorX - 1)
+    const centerY = y - radius * (2 * anchorY - 1)
 
     // 重建圆形以确保路径数据正确
     const oldItem = this._paperItem

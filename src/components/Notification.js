@@ -16,7 +16,7 @@ class Notification extends Component {
     this.width = config.width || 360
     this.notifType = config.type || 'info'
     this.title = config.title
-    this.message = config.message
+    this.text = config.text || config.message || ''
     this.showIcon = config.showIcon !== false
     this.radius = config.radius || 12
     this.fontFamily = config.fontFamily
@@ -80,11 +80,11 @@ class Notification extends Component {
 
     // 消息
     this._msgElement = null
-    if (this.message) {
+    if (this.text) {
       this._msgElement = new TextElement({
         x: 0,
         y: 0,
-        text: this.message,
+        text: this.text,
         fontSize: 14,
         fontFamily: this.fontFamily,
         color: this._config.msgColor,

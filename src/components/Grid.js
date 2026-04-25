@@ -22,6 +22,7 @@ class Grid extends Component {
     this.borderWidth = config.borderWidth || 1
     this.radius = config.radius || 0
     this.direction = config.direction || 'row' // row, column
+    this.children = config.children || []
   }
 
   initialize(paper) {
@@ -31,10 +32,8 @@ class Grid extends Component {
     this._initialized = true
   }
 
-  getLayout(context = {}) {
+  getLayout(context = {}, posX = 0, posY = 0) {
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
-    const absX = toPixels(this.x, context2d, 'x')
-    const absY = toPixels(this.y, context2d, 'y')
 
     // 转换单位
     const absWidth = toPixels(this.width, context2d, 'width')
@@ -68,12 +67,12 @@ class Grid extends Component {
         index: i,
         column: col,
         row: row,
-        x: absX + cellX,
-        y: absY + cellY,
+        x: posX + cellX,
+        y: posY + cellY,
         width: cellWidth,
         height: cellHeight,
-        centerX: absX + cellX + cellWidth / 2,
-        centerY: absY + cellY + cellHeight / 2,
+        centerX: posX + cellX + cellWidth / 2,
+        centerY: posY + cellY + cellHeight / 2,
       })
     }
 
@@ -141,6 +140,46 @@ class Grid extends Component {
       border.strokeWidth = absBorderWidth
       paper.project.activeLayer.addChild(border)
       this._pathElements.push(border)
+    }
+
+    // 渲染子元素 (children)
+    const layout = this.getLayout(context, posX, posY)
+    const children = this.children || []
+
+    for (let i = 0; i < children.length && i < layout.totalCells; i++) {
+      const child = children[i]
+      const pos = layout.cellPositions[i]
+
+      // 创建子元素矩形
+      const childRect = new paper.Path.Rectangle({
+        point: [pos.x, pos.y],
+        size: [pos.width, pos.height],
+        radius: absRadius / 2,
+      })
+
+      if (child.backgroundColor) {
+        childRect.fillColor = new paper.Color(child.backgroundColor)
+      } else if (this.backgroundColor) {
+        childRect.fillColor = new paper.Color(this.backgroundColor).clone()
+        childRect.fillColor.alpha = 0.5
+      }
+
+      paper.project.activeLayer.addChild(childRect)
+      this._pathElements.push(childRect)
+
+      // 如果有文字，添加文字
+      if (child.text) {
+        const textItem = new paper.PointText({
+          point: [pos.centerX, pos.centerY + 5],
+          content: child.text,
+          fontSize: 14,
+          fontFamily: 'Microsoft YaHei',
+          fillColor: new paper.Color(child.color || '#ffffff'),
+          justification: 'center',
+        })
+        paper.project.activeLayer.addChild(textItem)
+        this._pathElements.push(textItem)
+      }
     }
   }
 

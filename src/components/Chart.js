@@ -38,11 +38,15 @@ class Chart extends Component {
     const absX = toPixels(this.x, context2d, 'x')
     const absY = toPixels(this.y, context2d, 'y')
 
+    // 转换单位
+    const absWidth = toPixels(this.width, context2d, 'width')
+    const absHeight = toPixels(this.height, context2d, 'height')
+
     // 支持 anchor 定位
     const anchorX = this.anchor ? this.anchor[0] : 0.5
     const anchorY = this.anchor ? this.anchor[1] : 0.5
-    const posX = absX - this.width * anchorX
-    const posY = absY - this.height * anchorY
+    const posX = absX - absWidth * anchorX
+    const posY = absY - absHeight * anchorY
 
     // 清理旧元素
     for (const el of this._pathElements) {

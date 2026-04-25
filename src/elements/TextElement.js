@@ -122,7 +122,10 @@ class TextElement extends BaseElement {
       wrappedTextHeight = wrappedLines.length * fontSize * this.lineHeight
     }
 
-    // 获取文字尺寸（必须在设置 content 之后）
+    // 应用字体大小
+    this._paperItem.fontSize = fontSize
+
+    // 获取文字尺寸（必须在设置 content 和 fontSize 之后）
     const textWidth = maxLineWidth || this._paperItem.bounds.width
     const textHeight = wrappedTextHeight || this._paperItem.bounds.height
 
@@ -139,8 +142,6 @@ class TextElement extends BaseElement {
 
     // 直接设置 point 属性（基线位置）
     this._paperItem.point = new paper.Point(posX, posY)
-
-    this._paperItem.fontSize = fontSize
 
     // 更新字体回退链
     const fontChain = getFontFallbackChain(this.fontFamily, this.text)

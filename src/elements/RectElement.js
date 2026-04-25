@@ -53,8 +53,8 @@ class RectElement extends BaseElement {
     const y = toPixels(this.y, context2d, 'y')
 
     // 支持 anchor 定位：[0,0] = 左上角，[0.5, 0.5] = 中心点
-    const anchorX = this.anchor ? this.anchor[0] : 0
-    const anchorY = this.anchor ? this.anchor[1] : 0
+    const anchorX = this.anchor ? this.anchor[0] : 0.5
+    const anchorY = this.anchor ? this.anchor[1] : 0.5
     const posX = x - width * anchorX
     const posY = y - height * anchorY
 

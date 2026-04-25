@@ -21,6 +21,7 @@ class Columns extends Component {
     this.radius = config.radius || 0
     this.direction = config.direction || 'horizontal' // horizontal, vertical
     this.align = config.align || 'top' // top, center, bottom
+    this.children = config.children || []
   }
 
   initialize(paper) {
@@ -30,10 +31,8 @@ class Columns extends Component {
     this._initialized = true
   }
 
-  getLayout(context = {}) {
+  getLayout(context = {}, posX = 0, posY = 0) {
     const context2d = { width: context.width || 1920, height: context.height || 1080 }
-    const absX = toPixels(this.x, context2d, 'x')
-    const absY = toPixels(this.y, context2d, 'y')
 
     // 转换单位
     const absWidth = toPixels(this.width, context2d, 'width')
@@ -57,8 +56,8 @@ class Columns extends Component {
 
       columnPositions.push({
         index: i,
-        x: absX + colX,
-        y: absY + colY,
+        x: posX + colX,
+        y: posY + colY,
         width: columnWidth,
         height: absHeight,
       })
@@ -141,6 +140,46 @@ class Columns extends Component {
       line.strokeWidth = 1
       paper.project.activeLayer.addChild(line)
       this._pathElements.push(line)
+    }
+
+    // 渲染子元素 (children)
+    const layout = this.getLayout(context, posX, posY)
+    const children = this.children || []
+
+    for (let i = 0; i < children.length && i < layout.columnPositions.length; i++) {
+      const child = children[i]
+      const pos = layout.columnPositions[i]
+
+      // 创建子元素矩形
+      const childRect = new paper.Path.Rectangle({
+        point: [pos.x, pos.y],
+        size: [pos.width, pos.height],
+        radius: absRadius / 2,
+      })
+
+      if (child.backgroundColor) {
+        childRect.fillColor = new paper.Color(child.backgroundColor)
+      } else if (this.backgroundColor) {
+        childRect.fillColor = new paper.Color(this.backgroundColor).clone()
+        childRect.fillColor.alpha = 0.5
+      }
+
+      paper.project.activeLayer.addChild(childRect)
+      this._pathElements.push(childRect)
+
+      // 如果有文字，添加文字
+      if (child.text) {
+        const textItem = new paper.PointText({
+          point: [pos.x + pos.width / 2, pos.y + pos.height / 2 + 5],
+          content: child.text,
+          fontSize: 14,
+          fontFamily: 'Microsoft YaHei',
+          fillColor: new paper.Color(child.color || '#ffffff'),
+          justification: 'center',
+        })
+        paper.project.activeLayer.addChild(textItem)
+        this._pathElements.push(textItem)
+      }
     }
   }
 
