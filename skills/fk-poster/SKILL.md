@@ -16,7 +16,11 @@ npm install @chnak/poster
 ## 快速开始
 
 ```javascript
-const { PosterBuilder, TextElement, RectElement } = require('@chnak/poster')
+// 本地开发时使用 src 路径
+const { PosterBuilder, TextElement, RectElement } = require('./src/index')
+
+// npm 安装后使用
+// const { PosterBuilder, TextElement, RectElement } = require('@chnak/poster')
 
 async function main() {
   // 创建海报构建器
@@ -37,8 +41,8 @@ async function main() {
   })
   layer.addElement(rect)
 
-  // 导出
-  await poster.exportPNG('my-poster', '../output')
+  // 导出到 output 目录
+  await poster.exportPNG('my-poster', './output')
   poster.destroy()
 }
 
@@ -61,7 +65,7 @@ const poster = new PosterBuilder({
 const layer = poster.createLayer({ name: 'main', zIndex: 0 })
 
 // 导出 PNG（自动渲染）
-await poster.exportPNG('filename', '../output')
+await poster.exportPNG('filename', './output')
 
 // 销毁
 poster.destroy()
@@ -95,6 +99,12 @@ anchor: [1, 1]     → 右下角对齐 (x, y 是元素右下角)
 ### 文字定位提示
 - 使用 `anchor: [0, 0]` 可以让文字从左上角开始，方便控制边界
 - Paper.js 中文字基线在文字底部，需要预留 baseline offset
+
+### 自适应组件
+部分组件支持内容自适应高度（height 可省略）：
+- Card - 卡片
+- Quote - 引用
+- Notification - 通知
 
 ## 基础元素
 
@@ -184,16 +194,16 @@ const button = new Button({
 ```
 
 ### Card - 卡片
-支持标题和副标题，自动换行，内容从左上角开始。
+支持标题和副标题，自动换行。height 可省略（自适应内容高度）。
 ```javascript
 const card = new Card({
   x: 400, y: 300,
   width: 350,
-  height: 120,
+  // height 可省略，内容自适应
   title: '卡片标题',
   titleSize: 24,
   titleColor: '#000000',
-  subtitle: '卡片副标题内容',
+  subtitle: '卡片副标题内容，这是一个比较长的文本用于测试自动换行功能',
   subtitleSize: 16,
   subtitleColor: '#666666',
   backgroundColor: '#ffffff',
@@ -335,11 +345,12 @@ const statCard = new StatCard({
 ```
 
 ### Quote - 引用
-支持自动换行和自适应高度。
+支持自动换行和自适应高度。width 必填，height 可省略。
 ```javascript
 const quote = new Quote({
   x: 400, y: 300,
   width: 350,
+  // height 可省略，内容自适应
   text: '这是引用内容的文本',
   author: '引用作者',
   backgroundColor: '#2d2d3a',
@@ -418,11 +429,12 @@ const listItem = new ListItem({
 ```
 
 ### Notification - 通知
-支持长文本自动换行。
+支持长文本自动换行。width 必填，height 可省略（自适应内容）。
 ```javascript
 const notification = new Notification({
   x: 400, y: 300,
   width: 320,
+  // height 可省略，内容自适应
   title: '提示',
   message: '操作已成功完成',
   backgroundColor: '#10b981',
@@ -670,13 +682,13 @@ const star = new Star({
 
 ### PNG
 ```javascript
-await poster.exportPNG('my-poster', '../output')
+await poster.exportPNG('my-poster', './output')
 // 输出到: ./output/my-poster.png
 ```
 
 ### SVG
 ```javascript
-await poster.exportSVG('my-poster', '../output')
+await poster.exportSVG('my-poster', './output')
 // 输出到: ./output/my-poster.svg
 ```
 

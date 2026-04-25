@@ -119,7 +119,7 @@ async function main() {
     textColor: '#ffffff', fontSize: 18, radius: 25
   }))
 
-  await poster.exportPNG('app-12-event-poster', '../output')
+  await poster.exportPNG('app-12-event-poster', './output')
   poster.destroy()
   console.log('Event poster saved to output/app-12-event-poster.png')
 }

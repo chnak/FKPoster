@@ -71,7 +71,7 @@ async function main() {
     color: '#d4af37', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('app-16-book-cover', '../output')
+  await poster.exportPNG('app-16-book-cover', './output')
   poster.destroy()
   console.log('Book cover saved to output/app-16-book-cover.png')
 }

@@ -84,7 +84,7 @@ async function main() {
     showText: false
   }))
 
-  await poster.exportPNG('app-05-coupon', '../output')
+  await poster.exportPNG('app-05-coupon', './output')
   poster.destroy()
   console.log('Coupon saved to output/app-05-coupon.png')
 }

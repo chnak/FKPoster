@@ -111,7 +111,7 @@ async function main() {
     textColor: '#ffffff', fontSize: 18, radius: 25
   }))
 
-  await poster.exportPNG('app-18-restaurant', '../output')
+  await poster.exportPNG('app-18-restaurant', './output')
   poster.destroy()
   console.log('Restaurant poster saved to output/app-18-restaurant.png')
 }

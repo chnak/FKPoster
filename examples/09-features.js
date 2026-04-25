@@ -53,7 +53,7 @@ async function main() {
     backgroundColor: '#1a1a2e', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('09-features', '../output')
+  await poster.exportPNG('09-features', './output')
   poster.destroy()
   console.log('Features test saved to output/09-features.png')
 }

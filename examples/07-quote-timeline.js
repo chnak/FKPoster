@@ -69,7 +69,7 @@ async function main() {
     anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('07-quote-timeline', '../output')
+  await poster.exportPNG('07-quote-timeline', './output')
   poster.destroy()
   console.log('Quote and timeline test saved to output/07-quote-timeline.png')
 }

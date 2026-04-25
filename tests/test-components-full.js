@@ -52,7 +52,7 @@ async function test() {
 
   console.log('=== FKPoster 全量组件测试 ===\n')
   
-  const outputDir = '../output/components-full'
+  const outputDir = './output/components-full'
   require('fs').mkdirSync(outputDir, { recursive: true })
   
   let passed = 0, failed = 0

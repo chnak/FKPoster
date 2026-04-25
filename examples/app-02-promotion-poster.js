@@ -81,7 +81,7 @@ async function main() {
     color: '#666666', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('app-02-promotion-poster', '../output')
+  await poster.exportPNG('app-02-promotion-poster', './output')
   poster.destroy()
   console.log('Promotion poster saved to output/app-02-promotion-poster.png')
 }

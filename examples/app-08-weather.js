@@ -85,7 +85,7 @@ async function main() {
     color: '#94a3b8', anchor: [0, 0]
   }))
 
-  await poster.exportPNG('app-08-weather', '../output')
+  await poster.exportPNG('app-08-weather', './output')
   poster.destroy()
   console.log('Weather card saved to output/app-08-weather.png')
 }

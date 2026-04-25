@@ -84,7 +84,7 @@ async function main() {
     color: '#cc0000'
   }))
 
-  await poster.exportPNG('app-04-certificate', '../output')
+  await poster.exportPNG('app-04-certificate', './output')
   poster.destroy()
   console.log('Certificate saved to output/app-04-certificate.png')
 }

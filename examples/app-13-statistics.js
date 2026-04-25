@@ -67,7 +67,7 @@ async function main() {
     borderColor: '#e2e8f0'
   }))
 
-  await poster.exportPNG('app-13-statistics', '../output')
+  await poster.exportPNG('app-13-statistics', './output')
   poster.destroy()
   console.log('Statistics saved to output/app-13-statistics.png')
 }

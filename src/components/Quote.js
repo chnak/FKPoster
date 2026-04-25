@@ -123,22 +123,24 @@ class Quote extends Component {
     const textLines = this._wrapText(paper, this.text, contentWidth, absFontSize, this.fontFamily)
     const lineHeight = absFontSize * 1.2  // 恢复行高
 
-    // 计算内容高度（简洁版）
+    // 计算内容高度
     // 文本高度 + 作者高度
+    const authorFontSize = absFontSize * 0.85
     const textHeight = textLines.length * lineHeight
-    const authorHeight = this.author ? absFontSize * 0.8 : 0
-    const authorGap = this.author ? absFontSize * 0.5 : 0
+    const authorHeight = this.author ? authorFontSize : 0
+    // 作者与文本的间距（至少一行高度的间距）
+    const authorGap = this.author ? lineHeight : 0
 
     const totalContentHeight = absPadding * 2 + textHeight + authorGap + authorHeight
 
-    // 自适应高度：如果设置了 minHeight，使用它；否则完全自适应
+    // 自适应高度
     const actualHeight = this._minHeight > 0 ? Math.max(this._minHeight, totalContentHeight) : totalContentHeight
 
     // 位置
     const posX = absX - absWidth * anchorX
     const posY = absY - actualHeight * anchorY
 
-    // 更新背景
+    // 更新背景（中心对齐）
     if (this._bgElement && this._bgElement._paperItem) {
       this._bgElement.width = absWidth
       this._bgElement.height = actualHeight
@@ -149,7 +151,7 @@ class Quote extends Component {
       this._bgElement.render(paper, ctx)
     }
 
-    // 更新边框
+    // 更新左边框
     if (this._borderElement && this._borderElement._paperItem) {
       this._borderElement.width = absBorderWidth
       this._borderElement.height = actualHeight
@@ -159,30 +161,42 @@ class Quote extends Component {
       this._borderElement.render(paper, ctx)
     }
 
-    // 引号位置
+    // 内容起点 Y（顶部 + padding）
+    const contentStartY = posY + absPadding
+
+    // 内容起点 X（左侧 + padding + border）
+    const contentStartX = posX + absPadding + absBorderWidth
+
+    // 引号位置（左侧，baseline 偏移）
     if (this._quoteElement && this._quoteElement._paperItem) {
       this._quoteElement.x = posX + absPadding
-      this._quoteElement.y = posY + absPadding + absFontSize * 0.3
+      this._quoteElement.y = contentStartY + absFontSize
       this._quoteElement.fontSize = absFontSize * 2
       this._quoteElement.render(paper, ctx)
       this._quoteElement._paperItem.bringToFront()
     }
 
-    // 文本位置
+    // 文本位置（引号右侧，baseline 偏移）
     if (this._textElement && this._textElement._paperItem) {
       this._textElement.text = textLines.join('\n')
-      this._textElement.x = posX + absPadding + absBorderWidth+15
-      this._textElement.y = posY + absPadding + absFontSize +(textLines.length>1?15:-5)-5
+      this._textElement.x = contentStartX + 10
+      // 多行文本需要调整 Y 位置：baselineY = contentStartY + absFontSize
+      const textHeight = textLines.length * lineHeight
+      const baselineY = contentStartY + absFontSize
+      this._textElement.y = baselineY - absFontSize + textHeight / 2
       this._textElement.fontSize = absFontSize
       this._textElement.render(paper, ctx)
       this._textElement._paperItem.bringToFront()
     }
 
-    // 作者位置
+    // 作者位置（文本下方，baseline 偏移）
     if (this._authorElement && this._authorElement._paperItem) {
-      const textEndY = posY + absPadding + textHeight + absFontSize
-      this._authorElement.x = posX + absPadding + absBorderWidth+15
-      this._authorElement.y = textEndY + authorGap - (textLines.length>1?10:5)-5
+      this._authorElement.x = posX + absPadding + absBorderWidth + 15
+      // 最后一行 baseline = contentStartY + 第一行 baseline 偏移 + (行数-1) * 行高
+      const lastLineBaseline = contentStartY + absFontSize + (textLines.length - 1) * lineHeight
+      // 作者 baseline = 最后一行 baseline + 行高（作为间距）+ 作者字体本身 baseline 偏移
+      this._authorElement.y = lastLineBaseline + lineHeight + authorFontSize
+      this._authorElement.fontSize = authorFontSize
       this._authorElement.render(paper, ctx)
       this._authorElement._paperItem.bringToFront()
     }

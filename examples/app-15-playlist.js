@@ -64,7 +64,7 @@ async function main() {
     color: '#888888', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('app-15-playlist', '../output')
+  await poster.exportPNG('app-15-playlist', './output')
   poster.destroy()
   console.log('Playlist cover saved to output/app-15-playlist.png')
 }

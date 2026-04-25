@@ -68,7 +68,7 @@ async function main() {
     color: '#ffffff'
   }))
 
-  await poster.exportPNG('app-01-business-card', '../output')
+  await poster.exportPNG('app-01-business-card', './output')
   poster.destroy()
   console.log('Business card saved to output/app-01-business-card.png')
 }

@@ -108,7 +108,7 @@ async function main() {
     textColor: '#ffffff', fontSize: 14, radius: 20
   }))
 
-  await poster.exportPNG('app-11-profile-card', '../output')
+  await poster.exportPNG('app-11-profile-card', './output')
   poster.destroy()
   console.log('Profile card saved to output/app-11-profile-card.png')
 }

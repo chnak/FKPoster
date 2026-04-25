@@ -58,7 +58,7 @@ async function main() {
     borderRadius: 50
   }))
 
-  await poster.exportPNG('app-14-banner', '../output')
+  await poster.exportPNG('app-14-banner', './output')
   poster.destroy()
   console.log('Banner saved to output/app-14-banner.png')
 }

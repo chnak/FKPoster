@@ -71,7 +71,7 @@ async function main() {
     color: '#ffffff', opacity: 0.8, anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('app-19-wechat', '../output')
+  await poster.exportPNG('app-19-wechat', './output')
   poster.destroy()
   console.log('WeChat cover saved to output/app-19-wechat.png')
 }

@@ -74,7 +74,7 @@ async function main() {
     anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('12-grid-columns', '../output')
+  await poster.exportPNG('12-grid-columns', './output')
   poster.destroy()
   console.log('Grid and columns test saved to output/12-grid-columns.png')
 }

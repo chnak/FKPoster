@@ -95,7 +95,7 @@ async function main() {
     borderColor: '#e94560', borderWidth: 3, style: 'circle', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('08-decorations', '../output')
+  await poster.exportPNG('08-decorations', './output')
   poster.destroy()
   console.log('Decorations test saved to output/08-decorations.png')
 }

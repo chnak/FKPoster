@@ -56,7 +56,7 @@ async function main() {
     textAlign: 'center', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('01-basic-elements', '../output')
+  await poster.exportPNG('01-basic-elements', './output')
   poster.destroy()
   console.log('Basic elements test saved to output/01-basic-elements.png')
 }

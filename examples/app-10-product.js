@@ -81,7 +81,7 @@ async function main() {
     textColor: '#ffffff', fontSize: 14, radius: 20
   }))
 
-  await poster.exportPNG('app-10-product', '../output')
+  await poster.exportPNG('app-10-product', './output')
   poster.destroy()
   console.log('Product card saved to output/app-10-product.png')
 }

@@ -136,7 +136,7 @@ async function main() {
     color: '#666666', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('app-06-menu', '../output')
+  await poster.exportPNG('app-06-menu', './output')
   poster.destroy()
   console.log('Menu saved to output/app-06-menu.png')
 }

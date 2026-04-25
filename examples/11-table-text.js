@@ -81,7 +81,7 @@ async function main() {
     x: 650, y: 540, size: 60, content: '🎯', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('11-table-text', '../output')
+  await poster.exportPNG('11-table-text', './output')
   poster.destroy()
   console.log('Table and text test saved to output/11-table-text.png')
 }

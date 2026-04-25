@@ -54,7 +54,7 @@ async function main() {
     trackColor: '#2d2d44', fillColor: '#533483', strokeWidth: 10, anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('04-progress', '../output')
+  await poster.exportPNG('04-progress', './output')
   poster.destroy()
   console.log('Progress test saved to output/04-progress.png')
 }

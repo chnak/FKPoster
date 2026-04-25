@@ -73,7 +73,7 @@ async function main() {
     backgroundColor: '#e94560', anchor: [0.5, 0.5]
   }))
 
-  await poster.exportPNG('05-cards-list', '../output')
+  await poster.exportPNG('05-cards-list', './output')
   poster.destroy()
   console.log('Cards and list test saved to output/05-cards-list.png')
 }
