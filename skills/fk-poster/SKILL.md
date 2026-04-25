@@ -96,6 +96,27 @@ anchor: [0.5, 0.5] → 居中定位 (x, y 是元素中心点) ← 默认
 anchor: [1, 1]     → 右下角对齐 (x, y 是元素右下角)
 ```
 
+### zIndex 层级系统
+所有元素和组件都支持 zIndex 属性，用于控制层级顺序。数值越大显示在上层。
+
+```javascript
+// 基础元素
+const rect = new RectElement({
+  x: 100, y: 100,
+  width: 100, height: 100,
+  zIndex: 1  // 层级，默认为 0
+})
+
+// 组件
+const button = new Button({
+  x: 200, y: 200,
+  text: '按钮',
+  zIndex: 10  // 可以设置为较大的值使其在上层
+})
+```
+
+> 注意：组件内部的子元素层级由组件内部控制，不会受外部 zIndex 影响。
+
 ### 文字定位提示
 - 使用 `anchor: [0, 0]` 可以让文字从左上角开始，方便控制边界
 - Paper.js 中文字基线在文字底部，需要预留 baseline offset
@@ -172,22 +193,22 @@ const divider = new DividerElement({
 ## 组件 (Components)
 
 ### Button - 按钮
+width 可省略，会根据文字内容自动计算。
 ```javascript
 const button = new Button({
   x: 400, y: 300,
-  width: 160,
+  width: 160,              // 可省略，自动适应文字宽度
   height: 50,
   text: '点击我',
-  textColor: '#ffffff',
+  textColor: '#ffffff',    // 或使用 color 属性
   fontSize: 24,
   backgroundColor: '#3b82f6',
-  borderColor: '#2563eb',
+  borderColor: '#2563eb',  // 暂不支持
   borderWidth: 0,
   radius: 8,
-  shadow: { blur: 10, color: 'rgba(0,0,0,0.2)' },
-  gradient: { colors: ['#3b82f6', '#2563eb'], angle: 0 },
-  icon: '←',
-  iconPosition: 'left',
+  // icon 支持 emoji 字符或 URL 图片（http:// 或 data:）
+  icon: '🚀',  // 或 'https://example.com/icon.png'
+  iconPosition: 'left',    // 'left' | 'right'
   padding: 30,
   anchor: [0.5, 0.5]
 })
