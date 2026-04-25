@@ -26,7 +26,12 @@ async function main() {
   // Table 表格
   layer.addElement(new Table({
     x: 400, y: 150, width: 500, height: 120,
-    headers: ['姓名', '年龄', '城市', '职业'],
+    columns: [
+      { title: '姓名', width: 100 },
+      { title: '年龄', width: 80 },
+      { title: '城市', width: 100 },
+      { title: '职业', width: 100 },
+    ],
     rows: [
       ['张三', '28', '北京', '工程师'],
       ['李四', '25', '上海', '设计师'],
