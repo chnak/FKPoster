@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@chnak/paper@^1.0.13":
-  version "1.0.13"
-  resolved "https://registry.npmjs.org/@chnak/paper/-/paper-1.0.13.tgz"
-  integrity sha512-3f5t0+ON/LerRw6OYG2lECrJl0vFcQ6yrDcUsXEvbQ0Xy4/gnIeoOPR2eLCg67B3o0rvzsTrDXNt7a3CbRVjSw==
+"@chnak/paper@^1.0.14":
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/@chnak/paper/-/paper-1.0.14.tgz#05b25353265644bf2a2bfb28596583dc0637a864"
+  integrity sha512-Aa5xvRLfgRQlfwvYYAiY0GwgQNbx9tN3Xi5vxyXq2TryEr/J1BwxidUTuuNikXKNnQ54GA2R44XeUUOabmDG2w==
   dependencies:
     canvas "npm:@napi-rs/canvas@^0.1.99"
 
